@@ -1,0 +1,65 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.dic
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: Parse .dic files for Obscure 2
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+
+uint TextureCount;
+local int t;
+for (t=0; t < TextureCount; t++)
+    {
+    struct{    
+        uint Padding;;
+        
+        uint NameLength;
+        
+        char Name[NameLength];
+        
+        uint MipmapsCount;
+        
+        uint AlphaFlag;
+        uint OneBitAlpha;
+        uint Width;
+        uint Height;
+        uint TextureFormat;
+        local int m;
+        struct{
+            for (m=0; m< MipmapsCount; m++)
+            {
+                struct{
+                    uint TextureSize;
+                    
+                    byte TextureData[TextureSize];
+                }Mip;
+            }
+        }Mipmaps;
+    }Texture <read = Str("%s (%s)",Name, GetTextureFormat(TextureFormat))>;
+}
+
+string GetTextureFormat(uint & value)
+{
+    switch(value)
+    {
+        case 21:
+            return "B8G8R8A8";
+        break;
+        case 23:
+            return "B5G6R5";
+        break;
+        case 25:
+            return "B5G5R5A1";
+        break;
+        
+        default:
+            return "Unknown";
+        break;
+    }
+}

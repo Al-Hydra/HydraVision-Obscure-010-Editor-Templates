@@ -1,0 +1,56 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+
+
+typedef struct{
+    struct ReadHeader Header;
+    struct ReadHeader Header;
+    uint unk1;
+    uint FrameCount;
+    uint FrameCountMultiplied;
+    uint FrameRate;
+    uint ObjectCount;
+    
+    if (FrameCount != 0)
+    {
+        LittleEndian();
+        
+        struct{
+            float X;
+            float Y;
+        }vectors1[FrameCount];
+
+        struct{
+            float X;
+            float Y;
+            float Z;
+        }vectors2[FrameCount];
+        struct{
+            float X;
+            float Y;
+            float Z;
+        }vectors3[FrameCount];
+        struct{
+            float X;
+            float Y;
+            float Z;
+        }vectors4[FrameCount];
+        struct{
+            float X;
+            float Y;
+            float Z;
+        }vectors5[FrameCount];
+    }
+    BigEndian();
+}zwoCameraAnim;

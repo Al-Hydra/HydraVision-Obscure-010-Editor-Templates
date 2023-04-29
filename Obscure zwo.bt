@@ -1,0 +1,411 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.zwo
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: Parse .zwo files for Obscure 1 and 2
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+#include "zwoCamera.bt"
+#include "zwoCameraAnm.bt"
+#include "zwoAnimation.bt"
+
+BigEndian();
+local int Type = ReadInt();
+while (!FEof())
+{
+    uint DataType <hidden = true>;
+    
+    switch(DataType)
+    {
+        case 2:
+            struct zwoCamera Camera;
+        break;
+
+        case 3:
+            struct Mat Material <read = this.MaterialName.String>;
+        break;
+        
+        case 4:
+            Printf("End of file\n");
+        break;
+
+        case 5:
+            struct Mesh Model <read = this.ModelName>;
+        break;
+        
+        case 6:
+            struct SKL Skeleton;// <read = this.SkeletonName>; 
+        break;
+
+        case 9:
+            struct zwoCameraAnim CameraAnim;
+        break;
+
+        case 0xe:
+            struct zwoAnimation RigidAnimation <read = "RigidAnimation">;
+        break;
+
+        default:
+            struct{
+            uint DataSize;
+            byte Data[DataSize-4];
+            }Unknown <read = GetChunkType(DataType)>;
+        break;
+    }
+
+}
+typedef struct{
+    uint DataSize;
+    byte ModelType;
+    uint StringLength;
+    char ModelName[StringLength];
+    
+    uint PaddingCount;
+    if (ModelType == 6)
+    {
+    uint padding[PaddingCount];
+    }
+    
+    uint MaterialCount;
+    local int m;
+    struct{
+        for (m=0; m<MaterialCount; m++)
+        struct{
+            uint StringLength;
+            char Name[StringLength];
+        }MaterialName <read = Name>;
+    }MaterialNames;
+    
+    uint flags;
+    
+    if (flags == 1)
+    {FSkip(284);}
+    else if (flags == 9)
+    {FSkip(292);}
+    /*uint test;
+    uint test;
+    uint test;
+    uint SomeCount;
+    struct{
+        uint test;
+        uint test;
+        float test;
+        float test;
+        float test;
+        float test;
+        float test;
+        float test;
+        float test;
+        float test;
+        float test;
+        short test;
+    }t[SomeCount];*/
+    
+    uint unk6;
+    uint VertexCount;
+    ubyte VertexFlags[4];
+    
+    switch (VertexFlags[2])
+    {
+        case 0:
+            struct{
+    
+            struct fVP VertexPosition <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+            struct fVN VertexNormal <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+            struct VC VertexColor <read = Str("(%d, %d, %d, %d)", this.A, this.R, this.G, this.B)>;
+            struct fUV UV <read = Str("(%f, %f)", this.U, this.V)>;
+
+        }Vertices[VertexCount];
+        break;
+        
+        case 3:
+        struct{
+    
+            struct fVP VertexPosition <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+            struct fVN VertexNormal <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+            struct VC VertexColor <read = Str("(%d, %d, %d, %d)", this.A, this.R, this.G, this.B)>;
+            struct fUV UV <read = Str("(%f, %f)", this.U, this.V)>;
+            struct VW VertexWeights[3] ;
+        }Vertices[VertexCount];
+        break;
+
+        case 7:
+            struct{
+    
+            struct fVP VertexPosition <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+            struct fVN VertexNormal <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+            struct VC VertexColor <read = Str("(%d, %d, %d, %d)", this.A, this.R, this.G, this.B)>;
+            struct fUV UV <read = Str("(%f, %f)", this.U, this.V)>;
+            struct VW VertexWeights[4];
+        }Vertices[VertexCount];
+        break;
+    }
+    
+    
+    uint FaceCount;
+    int MatCount;
+    int FaceType;
+    struct Face Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
+}Mesh;
+
+typedef struct{
+    uint FileSize;
+    byte Verify;
+    
+    if ( (Verify - 2) < 2) //this is how it was done in the game code
+    {
+        struct ReadString MaterialName;
+        float vector1[3];
+        float vector2[3];
+        float vector3[3];
+        
+        float unk1;
+        float unk2;
+        float unk3;
+        float unk4;
+        float unk5;
+        
+        float vector4[3];
+        
+        int unkint1;
+        int unkint2;
+        
+        float unk6;
+        float unk7;
+        float unk8;
+        float unk9;
+        float unk10;
+        float unk11;
+        float unk12;
+        float unk13;
+        float unk14;
+    
+        int unkint3;
+        
+        struct ReadString TextureName;
+        
+        if (Verify == 0x03)
+        {
+            int unk15;
+            int unk16;
+            
+            if ( (unk16 & 1) == 1)
+            {
+                struct ReadString UnkString;
+            }
+        
+            if ( (unk16 & 2) == 2)
+            {
+                float unk17;
+                uint unk18;
+            }
+        }
+        FSkip(4);
+    }
+}Mat;
+
+
+typedef struct{
+    
+    struct Header3D Header3D;
+
+    /*if (Verify == 6)
+    {
+    FSkip(48);
+    }
+    else
+    {
+    FSkip(0x1c);
+    }*/
+    
+    uint unk1;
+    uint BoneCount;
+    uint unk2;
+    
+    local int b;
+    struct{
+        for (b=0; b<BoneCount; b++)
+            {
+            struct ReadBone Bone;
+            }
+    }Bones;
+}SKL;
+
+typedef struct{
+    float X;
+    float Y;
+    float Z;
+}fVP;
+
+typedef struct{
+    float X;
+    float Y;
+    float Z;
+}fVN;
+
+typedef struct{
+    float U;
+    float V;
+}fUV;
+
+typedef struct{
+    int BoneID;
+    float Weight;
+}VW;
+
+typedef struct{
+    ubyte A;
+    ubyte R;
+    ubyte G;
+    ubyte B;
+}VC;
+
+typedef struct{
+    short VertexIndex1;
+    short VertexIndex2;
+    short VertexIndex3;
+    short MaterialIndex;
+}Face;
+
+typedef struct{
+    float Row1[4];
+    float Row2[4];
+    float Row3[4];
+    float Row4[4];
+}Matrix4x4;
+
+typedef struct{
+    uint StringLength;
+    char String[StringLength];
+}ReadString <read = String>;
+
+typedef struct{
+    uint Size;
+    
+    if (Size == 0)
+    {
+        Printf("***INVALID HEADER***\n Chunk Size Can't be 0\n");
+    }
+    else
+    {
+        byte HeaderType;
+        
+        if (HeaderType == 0)
+        {
+            Printf("***INVALID HEADER***\n Header Type Can't be 0\n");
+        }
+        
+        if (HeaderType == 5)
+        {
+            struct ReadString Name;
+            uint unk;
+        }
+    
+        if (HeaderType == 6)
+        {
+            struct ReadString Name;
+            uint unk1;
+            uint unk2;
+            uint unk3;
+            uint unk4;
+            uint unk5;
+            uint unk6;
+            
+        }
+    }
+}ReadHeader;
+
+typedef struct{
+    struct ReadHeader Basic;
+    
+    uint unk1;
+    uint unk2;
+    uint unk3;
+    
+    local uint local1 = unk1 >> 3 & 1;
+    local uint local2 = unk2 >> 4 & 1;
+
+    if ( (unk2 & 0x10000) != 0)
+    {
+        local uint value1 = 0;
+    }
+
+    if ( (unk2 & 0x20000) != 0)
+    {
+        local uint value2 = 1;
+    }
+
+    if ( (unk1 & 4) != 0)
+    {
+        struct ReadString String1;
+        struct ReadString String2;
+    }
+
+    FSkip(4);
+    
+    if ( (unk1 & 40) != 0)
+    {
+        FSkip(4);
+    }
+    
+    if ( (unk1 & 1) != 0)
+    {
+        FSkip(4);
+    }
+
+    FSkip(4);
+}Header3D;
+
+typedef struct{
+    uint unk;
+    struct ReadString Name;
+    uint ChildCount;
+    
+    int ChildBones[ChildCount];
+            
+    struct Matrix4x4 BoneMatrix;
+}ReadBone <read = Name.String>;
+
+//Functions
+string GetChunkType(uint & value)
+{
+    switch(value)
+    {
+        case 2:
+            return "Camera";
+        break;
+
+        case 3:
+            return "Material";
+        break;
+
+        case 4:
+            return "EOF";
+        break;
+
+        case 5:
+            return "Mesh";
+        break;
+        
+        case 6:
+            return "Skeleton";
+        break;
+        
+        case 7:
+            return "Skeletal Animation";
+        break;
+
+        case 9:
+            return "Camera Animation";
+        break;
+
+        case 0xe:
+            return "Rigid Animation";
+        break;
+    }
+}

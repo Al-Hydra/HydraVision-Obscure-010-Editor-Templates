@@ -1,0 +1,52 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+
+typedef struct{
+    struct ReadHeader Header;
+    struct ReadHeader Header;
+    
+    uint Flag1;
+    local int unklocal = Flag1 & 1;
+    uint Flag;
+    uint FrameCount;
+    uint ObectCount;
+    float FrameCountMultiplied;
+    float FrameRate;
+    
+    if ((Flag == 0) && (FrameCount != 0))
+    {
+        uint unk7;
+    }
+    LittleEndian();
+    struct{
+        float X;
+        float Y;
+        float Z;
+    }Position[FrameCount];
+    
+    struct{
+        float X;
+        float Y;
+        float Z;
+        float W;
+    }Rotation[FrameCount];
+    
+    struct{
+        float X;
+        float Y;
+        float Z;
+    }Scale[FrameCount];
+    BigEndian();
+
+}zwoAnimation;

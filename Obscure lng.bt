@@ -1,0 +1,39 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.lng
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: Parse .lng files in Obscure 2
+//  Category: 
+// File Mask: 04 0F 00 00
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+uint Magic;
+if (Magic == 0)
+{
+    BigEndian();
+}
+uint StringsCount;
+local int s;
+local int ss;
+for (s=0; s < StringsCount; s++)
+{
+    struct{
+        short StringIndex;
+        short idk2;
+        uint SubStringCount;
+        struct{
+            for (ss=0; ss < SubStringCount; ss++)
+            {
+                struct{
+                    short Unk1;
+                    short Unk2;
+                    uint StringLength;
+                    char String[StringLength];
+                }String;
+            }
+        }SubString;
+    }String;
+}

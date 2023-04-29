@@ -1,0 +1,40 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+
+typedef struct{
+    int Size;
+    
+    byte flag;
+    
+    if ( (flag - 2) < 2)
+    {
+        local int localvar = 0;
+        struct ReadString Name;
+        
+        if ( flag == 0x3)
+        {
+            int unk1;
+            int unk2;
+        }
+        
+        float unkf1;
+        float unkf2;
+        
+        float vec1[3];
+        float vec2[3];
+        float vec3[3];
+        float vec4[3];
+        
+    }
+}zwoCamera;
