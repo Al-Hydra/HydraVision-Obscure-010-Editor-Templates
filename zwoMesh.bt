@@ -1,0 +1,168 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+typedef struct{
+    struct zwoEntity Entity;
+    
+    struct zwoEntity3D Entity3D;
+    
+    if (Entity3D.flags1 != 2)
+    
+    {
+        struct zwoGeometry Geometry;
+        uint flags;
+        uint unk5;
+        if (Entity3D.MeshType == 2)
+        {
+        float unk6;
+        float unk7;
+        }
+        
+        struct VertexBuffer Vertices;
+        
+        uint FaceCount;
+        int unk9;
+        int unk3;
+        struct Face Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
+    }
+}zwoMesh;
+
+typedef struct{
+    uint VertexCount;
+    uint VertexFlags;
+    struct{
+    
+        struct fVP VertexPosition <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+        
+        if ( (VertexFlags & 1) != 0)
+        {
+            struct fVN VertexNormal <read = Str("(%f, %f, %f)", this.X, this.Y, this.Z)>;
+        }
+    
+        if ( (VertexFlags & 2) != 0)
+        {
+            struct VC VertexColor1 <read = Str("(%d, %d, %d, %d)", this.A, this.R, this.G, this.B)>;
+        }
+    
+        if ( (VertexFlags & 4) != 0)
+        {
+            struct VC VertexColor2 <read = Str("(%d, %d, %d, %d)", this.A, this.R, this.G, this.B)>;
+        }
+    
+        if ( (VertexFlags & 8) != 0)
+        {
+            struct fUV UV1 <read = Str("(%f, %f)", this.U, this.V)>;
+        }
+    
+        if ( (VertexFlags & 0x10) != 0)
+        {
+            struct fUV UV2 <read = Str("(%f, %f)", this.U, this.V)>;
+        }
+    
+        if ( (VertexFlags & 0x20) != 0)
+        {
+            struct fUV UV3 <read = Str("(%f, %f)", this.U, this.V)>;
+        }
+    
+        if ( (VertexFlags & 0x40) != 0)
+        {
+            struct fUV UV4 <read = Str("(%f, %f)", this.U, this.V)>;
+        }
+    
+        if ( (VertexFlags & 0x80) != 0)
+        {
+            struct VW VertexWeight1 <read = Str("(%d, %f)", this.BoneID, this.Weight)>;
+        }
+    
+        if ( (VertexFlags & 0x100) != 0)
+        {
+            struct VW VertexWeight2 <read = Str("(%d, %f)", this.BoneID, this.Weight)>;
+        }
+    
+        if ( (VertexFlags & 0x200) != 0)
+        {
+            struct VW VertexWeight3 <read = Str("(%d, %f)", this.BoneID, this.Weight)>;
+        }
+    
+        if ( (VertexFlags & 0x400) != 0)
+        {
+            struct VW VertexWeight4 <read = Str("(%d, %f)", this.BoneID, this.Weight)>;
+        }
+    }Vertex[VertexCount];
+}VertexBuffer;
+
+typedef struct{
+    uint TransformerCount;
+    local int m;
+    struct{
+        uint unk7[TransformerCount];
+        for (m=0; m<TransformerCount; m++)
+        {
+            struct Transformer Transformer1;
+            struct Transformer Transformer2;
+            struct zwoOBB OBB;
+        }
+    }zwoTransform;
+}zwoGeometry;
+
+
+typedef struct{
+    float X;
+    float Y;
+    float Z;
+}fVP;
+
+typedef struct{
+    float X;
+    float Y;
+    float Z;
+}fVN;
+
+typedef struct{
+    float U;
+    float V;
+}fUV;
+
+typedef struct{
+    int BoneID;
+    float Weight;
+}VW;
+
+typedef struct{
+    ubyte A;
+    ubyte R;
+    ubyte G;
+    ubyte B;
+}VC;
+
+typedef struct{
+    short VertexIndex1;
+    short VertexIndex2;
+    short VertexIndex3;
+    short MaterialIndex;
+}Face;
+
+typedef struct{
+    struct Vector Position;
+    struct Vector Scale;
+    struct Quaternion Rotation;
+    struct Matrix4x4 Matrix;
+}Transformer;
+
+typedef struct{
+    float unk1;
+    float unk2;
+    float unk3;
+    
+    struct Vector unk4[3];
+    
+}zwoOBB;

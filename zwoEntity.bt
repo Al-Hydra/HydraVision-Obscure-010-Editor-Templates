@@ -1,0 +1,44 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.zwo
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+typedef struct{
+    uint Size;
+    
+    if (Size != 0)
+    {
+    
+        byte HeaderType;
+        
+        if (HeaderType == 0)
+        {
+            Printf("***INVALID HEADER***\n Header Type Can't be 0\n");
+        }
+        
+        if (HeaderType == 5)
+        {
+            struct ReadString Name;
+            uint Type;
+        }
+    
+        if (HeaderType == 6)
+        {
+            struct ReadString Name;
+            uint Type;
+            uint unk2;
+            uint unk3;
+            uint unk4;
+            uint unk5;
+            uint unk6;
+            
+        }
+    }
+}zwoEntity;

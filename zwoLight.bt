@@ -1,0 +1,23 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.zwo
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct{
+    struct zwoEntity Entity;
+    struct zwoEntity3D Entity3D;
+    
+    uint unk1;
+    struct Transformer zt;
+    struct Vector v;
+    struct Vector v2;
+    float unk2[4];
+}zwoLight;

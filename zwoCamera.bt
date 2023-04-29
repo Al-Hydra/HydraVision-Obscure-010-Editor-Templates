@@ -1,17 +1,15 @@
 //------------------------------------------------
 //--- 010 Editor v13.0.1 Binary Template
 //
-//      File: 
-//   Authors: 
-//   Version: 
+//      File: *.zwo
+//   Authors: HydraBladeZ
+//   Version: 1.0
 //   Purpose: 
 //  Category: 
 // File Mask: 
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
-BigEndian();
-
 typedef struct{
     int Size;
     

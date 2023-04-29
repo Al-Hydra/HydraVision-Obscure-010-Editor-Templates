@@ -1,0 +1,68 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.zwo
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+typedef struct{
+    uint FileSize;
+    byte Verify;
+    
+    if ( (Verify - 2) < 2)
+    {
+        struct ReadString MaterialName;
+        float vector1[3];
+        float vector2[3];
+        float vector3[3];
+        
+        float unk1;
+        float unk2;
+        float unk3;
+        float unk4;
+        float unk5;
+        
+        float vector4[3];
+        
+        int unkint1;
+        int unkint2;
+        
+        float unk6;
+        float unk7;
+        float unk8;
+        float unk9;
+        float unk10;
+        float unk11;
+        float unk12;
+        float unk13;
+        float unk14;
+    
+        int unkint3;
+        
+        struct ReadString TextureName;
+        
+        if (Verify == 0x03)
+        {
+            int unk15;
+            int unk16;
+            
+            if ( (unk16 & 1) == 1)
+            {
+                struct ReadString UnkString;
+            }
+        
+            if ( (unk16 & 2) == 2)
+            {
+                float unk17;
+                uint unk18;
+            }
+        }
+        FSkip(4);
+    }
+}zwoMaterial;

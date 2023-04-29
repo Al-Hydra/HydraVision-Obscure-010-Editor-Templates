@@ -10,12 +10,10 @@
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
-BigEndian();
-
 
 typedef struct{
-    struct ReadHeader Header;
-    struct ReadHeader Header;
+    struct zwoEntity Entity;
+    struct zwoEntity Entity2;
     uint unk1;
     uint FrameCount;
     uint FrameCountMultiplied;

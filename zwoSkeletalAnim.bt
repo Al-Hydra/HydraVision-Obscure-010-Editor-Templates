@@ -1,0 +1,93 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.zwo
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+typedef struct{
+    
+    struct zwoEntity Entity;
+    struct zwoEntity Entity2;
+    
+    uint Flags;
+    
+    local int flag1 = Flags >> 1 & 1;
+    local int flag2 = Flags >> 2 & 1;
+    Printf("flag1 = %d\n", flag1);
+    Printf("flag2 = %d\n", flag2);
+    
+    uint BonesCount;
+    uint FrameCount;
+    uint FrameCountMultiplied;
+    uint FrameRate;
+    if (flag1 == 0)
+    {
+        LittleEndian();
+        
+        struct{
+            uint FrameCount;
+            uint CurveStartIndex;
+            uint CurveType;
+        }BoneCurves[BonesCount] <read = Str("(%d, %d, %d)", this.FrameCount, this.CurveStartIndex, this.CurveType)>;
+    }
+    else
+    {
+        LittleEndian();
+        uint unk[14];
+    }
+    BigEndian();
+    uint CurvesCount;
+    
+    LittleEndian();
+    struct{
+        float X;
+        float Y;
+        float Z;
+        float W;
+    }Curves[CurvesCount];
+    
+    BigEndian();
+    
+    if ( (Flags & 1) != 0)
+    {
+        struct{
+            float X;
+            float Y;
+            float Z;
+                
+            float X;
+            float Y;
+            float Z;
+
+            float X;
+            float Y;
+            float Z;
+            float W;
+        }unkCurve;
+    }
+    
+    if ( (Flags & 4) != 0)
+    {
+        struct{
+            float X;
+            float Y;
+            float Z;
+        
+            float X;
+            float Y;
+            float Z;
+        
+            float X;
+            float Y;
+            float Z;
+            float W;
+        }unkCurve;
+    }
+}zwoSkeletalAnim;
