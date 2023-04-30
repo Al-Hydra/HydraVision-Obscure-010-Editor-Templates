@@ -1,13 +1,13 @@
 //------------------------------------------------
 //--- 010 Editor v13.0.1 Binary Template
 //
-//      File: *.hvp
+//      File: 
 //   Authors: HydraBladeZ
 //   Version: 0.1
 //   Purpose: Parse Hydravision hvp archives
-//  Category: 
-// File Mask: 00 00 04 00
-//  ID Bytes: 
+//  Category: HydraVision
+// File Mask: *.hvp
+//  ID Bytes: 00 00 04 00
 //   History: 
 //------------------------------------------------
 LittleEndian();
