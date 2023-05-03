@@ -14,31 +14,32 @@ typedef struct{
     struct ReadMaterials MatNames;
     
     uint flags1;
-    Printf("flags1 = %d\n", flags1);
+    //Printf("flags1 = %d\n", flags1);
     uint flags2;
     uint unk1;
     
     local uint local1 = flags1 >> 3 & 1;
     local uint local2 = flags2 >> 4 & 1;
+    local int readExtra = 0;
     
-    Printf("local1 = %d\n", local1);
-    Printf("local2 = %d\n", local2);
+    //Printf("local1 = %d\n", local1);
+    //Printf("local2 = %d\n", local2);
 
     if ( (flags2 & 0x10000) != 0)
     {
-        Printf("0x10000 flag\n");
+        //Printf("0x10000 flag\n");
         local uint value1 = 0;
     }
 
     if ( (flags2 & 0x20000) != 0)
     {
-        Printf("0x20000 flag\n");
+        //Printf("0x20000 flag\n");
         local uint value2 = 1;
     }
 
     if ( (flags1 & 4) != 0)
     {
-        Printf("0x4 flag\n");
+        //Printf("0x4 flag\n");
         struct ReadString Param1;
         struct ReadString Param2;
     }
@@ -47,28 +48,29 @@ typedef struct{
 
     if ( (flags1 & 0x40) != 0)
     {
-        Printf("0x40 flag\n");
+        //Printf("0x40 flag\n");
 
         int unk3;
     }
     
     if ( (flags1 & 1) != 0)
     {
-        Printf("0x01 flag\n");
+        //Printf("0x01 flag\n");
 
         uint MeshType;
     }
-    if ( (flags1 & 2) != 0)
+    if ( (flags1 & 2) != 0) 
     {
-        Printf("0x02 flag\n");
+        //Printf("0x02 flag\n");
 
         struct ReadString Param1;
         struct Transformer Transformer1;
     }
     if ( (flags1 & 0x20) != 0)
     {
-        Printf("0x20 flag\n");
-        uint unk5;
+        //Printf("0x20 flag\n");
+        //uint unk5;
+        readExtra = 1;
     }
 
 }zwoEntity3D;

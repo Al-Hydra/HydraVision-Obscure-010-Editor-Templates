@@ -2,10 +2,10 @@
 //--- 010 Editor v13.0.1 Binary Template
 //
 //      File: 
-//   Authors: 
-//   Version: 
+//   Authors: HydraBladeZ
+//   Version: 1.0
 //   Purpose: 
-//  Category: 
+//  Category: HydraVision
 // File Mask: 
 //  ID Bytes: 
 //   History: 
@@ -19,20 +19,42 @@ typedef struct{
     
     {
         struct zwoGeometry Geometry;
-        uint flags;
+        uint VertexBufferFlag;
+
+        local int test = VertexBufferFlag >> 2 & 1;
+        local int test2 = VertexBufferFlag >> 3 & 1;
+
         uint unk5;
-        if (Entity3D.MeshType == 2)
+        if (Entity3D.MeshType == 2) //Rigid Mesh
         {
-        float unk6;
-        float unk7;
+            float unk6;
+            float unk7;
+            
+            if (test != 0)
+            {
+                local int VertexBufferCount = 1;
+            }
+            else
+            {
+                local int VertexBufferCount = Geometry.TransformerCount;
+            }
         }
-        
-        struct VertexBuffer Vertices;
+        else
+        {
+            local int VertexBufferCount = 1;
+        }
+        struct VertexBuffer Vertices[VertexBufferCount];
         
         uint FaceCount;
         int unk9;
+        Printf("unk9 = %d \n", unk9);
         int unk3;
         struct Face Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
+        
+        if (Entity3D.readExtra == 1)
+        {
+            uint unkExtra;
+        }
     }
 }zwoMesh;
 
@@ -163,6 +185,8 @@ typedef struct{
     float unk2;
     float unk3;
     
-    struct Vector unk4[3];
+    struct Vector Center;
+    struct Vector Extents;
+    struct Vector Orientation;
     
 }zwoOBB;

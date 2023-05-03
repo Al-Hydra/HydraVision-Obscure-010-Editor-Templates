@@ -32,9 +32,9 @@ typedef struct{
         LittleEndian();
         
         struct{
-            uint FrameCount;
+            uint EntryType;
             uint CurveStartIndex;
-            uint CurveType;
+            uint CurvesPerFrame;
         }BoneCurves[BonesCount] <read = Str("(%d, %d, %d)", this.FrameCount, this.CurveStartIndex, this.CurveType)>;
     }
     else

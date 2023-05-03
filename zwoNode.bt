@@ -32,10 +32,11 @@ typedef struct zwoNode{
             struct zwoNode ChildNode;
 
         }
-    uint NodeFlag;
-    if (NodeFlag != 0)
-    {
-        struct zwoNode ChildNode;
-    }
+        
+        uint NodeFlag;
+        if (NodeFlag != 0)
+        {
+            struct zwoNode ChildNode;
+        }
     }
 }ParentNode;

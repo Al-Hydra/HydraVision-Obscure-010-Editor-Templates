@@ -23,6 +23,8 @@
 
 BigEndian();
 local int Type = ReadInt();
+local int pos;
+local int chunkSize;
 while (!FEof())
 {
     uint DataType <hidden = true>;
@@ -62,7 +64,17 @@ while (!FEof())
         break;
         
         case 0xd:
+            pos = FTell();
+            chunkSize = ReadInt();
             struct zwoLight Light <read = "Light">;
+            if (sizeof(Light) != Light.Entity.Size)
+            {
+                Printf("***WARNING***\n FAILED TO READ LIGHT CHUNK\n***WARNING***\n");
+                FSeek(pos);
+                struct{
+                    byte Data[chunkSize];
+                }Light;
+            }
         break;
 
         case 0xe:
@@ -70,7 +82,18 @@ while (!FEof())
         break;
 
         case 0xf:
+            pos = FTell();
+            chunkSize = ReadInt();
+
             struct zwoLight Light <read = "Light2">;
+            if (sizeof(Light) != Light.Entity.Size)
+            {
+                Printf("***WARNING***\n FAILED TO READ LIGHT CHUNK\n***WARNING***\n");
+                FSeek(pos);
+                struct{
+                    byte Data[chunkSize];
+                }Light;
+            }
         break;
         
         default:
@@ -124,16 +147,23 @@ typedef struct{
 
 typedef struct{
     uint StringLength;
-    char String[StringLength];
+    if (StringLength > 0)
+    {
+        char String[StringLength];
+    }
+    else{
+        local string String = "NoName";
+    }
 }ReadString <read = String>;
 
 
 typedef struct{
     uint unk;
+    Assert(unk == 0);
     struct ReadString Name;
     uint ChildCount;
-    
-    int ChildBones[ChildCount];
+
+    int ChildBones[ChildCount] <read = parentof(parentof(parentof(this))).Bones.Bone[this].Name.String>;
             
     struct Matrix4x4 BoneMatrix;
 }ReadBone <read = Name.String>;

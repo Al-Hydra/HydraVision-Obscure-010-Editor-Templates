@@ -33,18 +33,28 @@ typedef struct{
         int unkint1;
         int unkint2;
         
-        float unk6;
-        float unk7;
-        float unk8;
-        float unk9;
-        float unk10;
-        float unk11;
-        float unk12;
+        struct{
+        float ScaleU;
+        float ScaleV;
+        }ScaleUV;
+        
+        struct{
+            float MoveU;
+            float MoveV;
+        }MoveUV;
+        
+        struct{
+            float RotateX;
+            float RotateY;
+            float RotateZ;
+        }RotateUV;
+
         float unk13;
         float unk14;
     
         int unkint3;
         
+        struct ReadString TextureName;
         struct ReadString TextureName;
         
         if (Verify == 0x03)
@@ -63,6 +73,5 @@ typedef struct{
                 uint unk18;
             }
         }
-        FSkip(4);
     }
 }zwoMaterial;

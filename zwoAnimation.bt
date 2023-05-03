@@ -2,8 +2,8 @@
 //--- 010 Editor v13.0.1 Binary Template
 //
 //      File: 
-//   Authors: 
-//   Version: 
+//   Authors: HydraBladeZ
+//   Version: 1.0
 //   Purpose: 
 //  Category: 
 // File Mask: 
@@ -20,7 +20,7 @@ typedef struct{
     local int unklocal = Flag1 & 1;
     uint Flag;
     uint FrameCount;
-    uint ObectCount;
+    uint ObjectCount;
     float FrameCountMultiplied;
     float FrameRate;
     
