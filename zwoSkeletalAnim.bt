@@ -32,10 +32,10 @@ typedef struct{
         LittleEndian();
         
         struct{
-            uint EntryType;
+            uint EntryTypeFlag;
             uint CurveStartIndex;
             uint CurvesPerFrame;
-        }BoneCurves[BonesCount] <read = Str("(%d, %d, %d)", this.FrameCount, this.CurveStartIndex, this.CurveType)>;
+        }BoneCurves[BonesCount] <read = Str("(%d, %d, %d)", this.EntryTypeFlag, this.CurveStartIndex, this.CurvesPerFrame)>;
     }
     else
     {
@@ -70,7 +70,7 @@ typedef struct{
             float Y;
             float Z;
             float W;
-        }unkCurve;
+        }Transformer1Curve;
     }
     
     if ( (Flags & 4) != 0)
@@ -88,6 +88,6 @@ typedef struct{
             float Y;
             float Z;
             float W;
-        }unkCurve;
+        }Transformer2Curve;
     }
 }zwoSkeletalAnim;

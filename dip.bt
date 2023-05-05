@@ -1,0 +1,54 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: *.dip
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: Parse dip texture containers
+//  Category: HydraVision
+// File Mask: *.dip
+//  ID Bytes: 00 00 00 00
+//   History: 
+//------------------------------------------------
+uint unk1;
+uint TextureCount;
+
+struct{
+    uint unk3;
+    uint namelength;
+    char name[namelength];
+    
+    uint MipmapsCount;
+    uint AlphaFlag;
+    uint OneBitAlpha;
+    
+    uint Width;
+    uint Height;
+    
+    uint PixelFormat;
+    
+    struct{
+        uint Size;
+        byte Data[Size];
+    }Mipmap[MipmapsCount] <optimize = false>;
+}Texture[TextureCount] <read = GetTextureFormat(PixelFormat), optimize = false>;
+
+string GetTextureFormat(uint & value)
+{
+    switch(value)
+    {
+        case 21:
+            return "B8G8R8A8";
+        break;
+        case 23:
+            return "B5G6R5";
+        break;
+        case 25:
+            return "B5G5R5A1";
+        break;
+        
+        default:
+            return "Unknown";
+        break;
+    }
+}

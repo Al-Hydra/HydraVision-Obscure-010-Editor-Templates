@@ -49,8 +49,14 @@ typedef struct{
         int unk9;
         Printf("unk9 = %d \n", unk9);
         int unk3;
-        struct Face Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
-        
+        if (unk3 == 0)
+        {
+            struct Face Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
+        }
+        else
+        {
+            struct FaceInt Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
+        }
         if (Entity3D.readExtra == 1)
         {
             uint unkExtra;
@@ -172,6 +178,13 @@ typedef struct{
     short VertexIndex3;
     short MaterialIndex;
 }Face;
+
+typedef struct{
+    uint VertexIndex1;
+    uint VertexIndex2;
+    uint VertexIndex3;
+    uint MaterialIndex;
+}FaceInt;
 
 typedef struct{
     struct Vector Position;

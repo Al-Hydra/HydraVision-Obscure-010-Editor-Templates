@@ -58,6 +58,7 @@ typedef struct{
         //Printf("0x01 flag\n");
 
         uint MeshType;
+        //Printf("Mesh type = %d\n", MeshType);
     }
     if ( (flags1 & 2) != 0) 
     {
