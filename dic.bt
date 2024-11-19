@@ -10,37 +10,78 @@
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
-BigEndian();
 
+local int Endianness;
+
+Endianness = CheckEndianness();
+
+
+
+if (Endianness)
+{
+    LittleEndian();
+
+    }
+else 
+{
+    BigEndian();
+    }
+    
 uint TextureCount;
+
 local int t;
 for (t=0; t < TextureCount; t++)
     {
-    struct{    
-        uint Padding;;
+    struct{
+        if (Endianness)
+        {
+            uint NameLength;
         
-        uint NameLength;
+            char Name[NameLength];
+            ushort Width;
+            ushort Height;
+            uint unk;
+            ushort ab;
+            ushort flag;
+
+            byte MipmapsCount;
+            byte flag;
+            ushort a;
+            local int m;
+            ushort TextureSize;
+            ushort a;
+                        
+            byte TextureData[TextureSize];
+        }
+        else
+        {
+            uint Padding;
+            uint NameLength;
+            
+            char Name[NameLength];
+            
+            uint MipmapsCount;
+            
+            uint AlphaFlag;
+            uint OneBitAlpha;
+            uint Width;
+            uint Height;
+            uint TextureFormat;
+            
+            local int m;
+            
+            struct{
+                for (m=0; m< MipmapsCount; m++)
+                {
+                    struct{
+                        uint TextureSize;
+                        
+                        byte TextureData[TextureSize];
+                    }Mip;
+                }
+            }Mipmaps;
+        }
         
-        char Name[NameLength];
-        
-        uint MipmapsCount;
-        
-        uint AlphaFlag;
-        uint OneBitAlpha;
-        uint Width;
-        uint Height;
-        uint TextureFormat;
-        local int m;
-        struct{
-            for (m=0; m< MipmapsCount; m++)
-            {
-                struct{
-                    uint TextureSize;
-                    
-                    byte TextureData[TextureSize];
-                }Mip;
-            }
-        }Mipmaps;
     }Texture <read = Str("%s (%s)",Name, GetTextureFormat(TextureFormat))>;
 }
 
@@ -63,3 +104,17 @@ string GetTextureFormat(uint & value)
         break;
     }
 }
+
+int CheckEndianness()
+{
+    uint EndiannessTest ;
+    FSeek(0);
+    if (EndiannessTest > 1000000)
+    {
+        return true;
+        }
+    else
+    {
+        return false;
+        }
+    }

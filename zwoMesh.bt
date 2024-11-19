@@ -46,10 +46,9 @@ typedef struct{
         struct VertexBuffer Vertices[VertexBufferCount];
         
         uint FaceCount;
-        int unk9;
-        Printf("unk9 = %d \n", unk9);
-        int unk3;
-        if (unk3 == 0)
+        int TriangleType; //0 = triangle strip, 1 = triangle list
+        int IndexType; // 0 = uint16, 1 = uint32
+        if (IndexType == 0)
         {
             struct Face Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
         }
@@ -135,9 +134,9 @@ typedef struct{
         uint unk7[TransformerCount];
         for (m=0; m<TransformerCount; m++)
         {
-            struct Transformer Transformer1;
-            struct Transformer Transformer2;
-            struct zwoOBB OBB;
+            struct Transformer LocalMatrix;
+            struct Transformer WorldMatrix;
+            struct zwoOBB OrientedBoundingBox;
         }
     }zwoTransform;
 }zwoGeometry;
@@ -194,12 +193,9 @@ typedef struct{
 }Transformer;
 
 typedef struct{
-    float unk1;
-    float unk2;
-    float unk3;
-    
     struct Vector Center;
-    struct Vector Extents;
-    struct Vector Orientation;
+    struct Vector Axis1;
+    struct Vector Axis2;
+    struct Vector Axis3;
     
 }zwoOBB;

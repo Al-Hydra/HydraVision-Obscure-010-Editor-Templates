@@ -10,6 +10,7 @@
 //  ID Bytes: 00 00 00 00
 //   History: 
 //------------------------------------------------
+LittleEndian();
 uint unk1;
 uint TextureCount;
 

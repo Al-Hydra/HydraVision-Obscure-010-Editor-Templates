@@ -3,62 +3,137 @@
 //
 //      File: 
 //   Authors: HydraBladeZ
-//   Version: 0.1
+//   Version: 1.0
 //   Purpose: Parse Hydravision hvp archives
 //  Category: HydraVision
 // File Mask: *.hvp
 //  ID Bytes: 00 00 04 00
 //   History: 
 //------------------------------------------------
-LittleEndian();
-uint Signature;
+BigEndian();
 
-FSkip(4);
+local int Pos;
 
-uint EntryCount;
+string Magic;
 
-uint DirectoryCRC32 <format = hex>;
-
-local int e;
-//local string Name;
-struct{
-    for (e; e<EntryCount; e++)
-    {
-        struct{
-            uint EntryNameCRC32 <format = hex>;
-            uint EntryType;
-            
-            if (EntryType == 4)
-            {
-                uint64 Padding;
-                uint SubEntryCount;
-                uint FirstEntryIndex;
-                local string FileName = "";
-            }
-            else
-            {
-                short Unknown;
-                short unk;
-                uint UncompressedSize;
-                uint Offset;
-                uint CompressedSize;
-                
-                local int Pos = FTell();
-                FSeek(Offset);
-                /*uint unk1;
-                uint unk2;
-                uint unk3;
-                byte unk4;
-                byte StringLength;
-                char FileName[StringLength];*/
-                byte FileData[CompressedSize];
-                FSeek(Pos);
-                
-            }
-        }Entry <read = Str("(%s)",GetEntryType(EntryType))>;
+if (Magic == "HV PackFile"){
+    
+    short a;
+    short CRC32Flag;
+    uint RootDirectoryCount;
+    uint DirectoyFilesCount;
+    uint FilesCount;
+    uint EntiresSize;
+    
+    if (CRC32Flag){
+        
+        uint HeaderCRC32 <format = hex>;
+        uint DirectoryCRC32 <format = hex>;
     }
-}Entries;
+    struct{
 
+        uint EntrySize;
+        ubyte EntryType;
+        
+        if (EntryType == 0){
+            
+            uint CompressionFlag;
+            uint SubEntriesCount;
+            uint DirectoryNameSize;
+            char DirectoryName[DirectoryNameSize];
+            
+            }
+        
+        else if (EntryType == 1){
+            
+            uint CompressionFlag;
+            uint CompressedFileSize;
+            uint UncompressedFileSize;
+            uint DataCRC32 <format = hex>;
+            uint DataOffset;
+            uint FileNameSize;
+            char FileName[FileNameSize];
+            
+            Pos = FTell();
+            FSeek(DataOffset);
+            ubyte Data[CompressedFileSize];
+            FSeek(Pos);
+            
+            }
+        
+        }Entries[DirectoyFilesCount] <optimize = false>;
+}
+    
+else{
+    FSeek(0);
+    LittleEndian();
+
+    uint Signature;
+
+    if (Signature == 327680)
+    {
+        FSkip(4);
+        uint EntryCount;
+    
+        uint DirectoryCRC32 <format = hex>;
+        uint NamesSize;
+        
+        /*struct{
+            string Name;
+        }Names[EntryCount] <read = Name>;*/
+        byte Names[NamesSize];
+        Align(16);
+        
+        BigEndian();
+        uint EntryType;
+        
+    }
+    
+    else
+    {
+        FSkip(4);
+        
+        uint EntryCount;
+        
+        uint DirectoryCRC32 <format = hex>;
+        
+        local int e;
+        //local string Name;
+        struct{
+            for (e; e<EntryCount; e++)
+            {
+                struct{
+                    uint EntryNameCRC32 <format = hex>;
+                    uint EntryType;
+                    //short unk;
+                    //Assert(unk == 0);
+                    
+                    if (EntryType == 4)
+                    {
+                        uint64 Padding;
+                        uint SubEntryCount;
+                        uint FirstEntryIndex;
+                        local string FileName = "";
+                    }
+                    else
+                    {
+                        uint DataCRC32 <format = hex>;
+                        uint UncompressedSize;
+                        uint Offset;
+                        uint CompressedSize;
+                        
+                        Pos = FTell();
+                        FSeek(Offset);
+                        byte FileData[CompressedSize];
+                        FSeek(Pos);
+                        
+                    }
+                }Entry <read = Str("(%s)",GetEntryType(EntryType))>;
+            }
+        }Entries;
+    
+    }
+}
 string GetEntryType(uint & value)
 {
     switch(value)
@@ -76,3 +151,10 @@ string GetEntryType(uint & value)
     
 }
 
+void Align(int value)
+{
+    local uint Remainder = FTell() % value;
+    local uint PaddingCount = value - Remainder;
+    
+    FSkip(PaddingCount);
+}

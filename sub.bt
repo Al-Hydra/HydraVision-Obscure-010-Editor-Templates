@@ -1,0 +1,23 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: HydraBladeZ
+//   Version: 1.0
+//   Purpose: Parse .sub files in Obscure 2
+//  Category: HydraVision
+// File Mask: *.sub
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+uint SubCount;
+
+struct{
+    //Exact second the subtitle starts.
+    //for example 6735 translates to 00:06:735
+    uint SubtitleStart;
+    uint SubtitleEnd;
+    short Index;
+    //this refers to the text ID in .lng files
+    short TextID;
+}Subtitle[SubCount];
