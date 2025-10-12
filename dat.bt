@@ -157,7 +157,7 @@ string ReadAttackInfo(CAttackInfo &a) {
 // ============================================
 
 typedef struct {
-    uint unknown_header <format=hex>;
+    //uint unknown_header <format=hex>;
     uint character_id <format=hex, comment="Character ID">;
     uint dodge <comment="Can dodge attacks (bool, from attacks->dodge)">;
     uint othersnpc <comment="Affects other NPCs (bool, from attacks->othersnpc)">;
@@ -232,7 +232,7 @@ typedef struct {
     float blood_uzi_radius <comment="blood->uzi->radius">;
     
     // Corpse Shadow - Death01 (from <corpseShadow><death01>)
-    uint corpse_shadow_death01_enabled <comment="corpseShadow->death01 present">;
+    short corpse_shadow_death01_enabled <comment="corpseShadow->death01 present">;
     if (corpse_shadow_death01_enabled) {
         CZVector death01_scale <comment="death01->scale (X,Y,Z)">;
         CZVector death01_offset <comment="death01->offset (X,Y,Z)">;
@@ -240,7 +240,7 @@ typedef struct {
     }
     
     // Corpse Shadow - Death02 (from <corpseShadow><death02>)
-    uint corpse_shadow_death02_enabled <comment="corpseShadow->death02 present">;
+    short corpse_shadow_death02_enabled <comment="corpseShadow->death02 present">;
     if (corpse_shadow_death02_enabled) {
         CZVector death02_scale <comment="death02->scale (X,Y,Z)">;
         CZVector death02_offset <comment="death02->offset (X,Y,Z)">;
@@ -437,7 +437,7 @@ string reverse(string str) {
 // ============================================
 // SUMMARY OUTPUT
 // ============================================
-
+local uint i;
 Printf("\n========================================\n");
 Printf("    CCharacterInfos DAT File Parser\n");
 Printf("========================================\n");
@@ -486,7 +486,6 @@ if (hair_count == 0)
 
 if (char_dat.linked_mesh_count > 0) {
     Printf("\n=== Linked Meshes (%u) ===\n", char_dat.linked_mesh_count);
-    local uint i;
     for (i = 0; i < char_dat.linked_mesh_count; i++) {
         Printf("[%u] ", i);
         if (char_dat.linked_meshes[i].mesh_name_offset >= 0)
