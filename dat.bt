@@ -1,0 +1,304 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: Character DAT File Template
+//   Authors: 
+//   Version: 1.0
+//   Purpose: Parse .dat character files from the game
+//  Category: Game Files
+// File Mask: *.dat
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+
+LittleEndian();
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} CZVector <read=ReadCZVector>;
+
+string ReadCZVector(CZVector &v) {
+    string s;
+    SPrintf(s, "(%.3f, %.3f, %.3f)", v.x, v.y, v.z);
+    return s;
+}
+
+
+
+typedef struct {
+    uint total_size <format=hex, bgcolor=cLtBlue>;
+    uint reserved <hidden=true>;
+    char char_id[4] <format=hex>;
+    char anim_id[4] <format=hex>;
+    
+    // String pool
+    uint string_pool_size <format=hex, bgcolor=cLtGreen>;
+    if (string_pool_size > 0) {
+        char anim_string_pool[string_pool_size] <bgcolor=cLtGreen>;
+    }
+    
+    // Data array 1: offsets and flags
+    uint data_count_1 <bgcolor=cLtYellow>;
+    if (data_count_1 > 0) {
+        uint data_1_offsets[data_count_1] <format=hex, bgcolor=cLtYellow>;
+        byte data_1_flags[data_count_1] <bgcolor=cYellow>;
+    }
+    
+    // Data array 2: 16-byte entries
+    uint data_count_2 <bgcolor=cLtPurple>;
+    if (data_count_2 > 0) {
+        struct {
+            byte data[16] <format=hex>;
+        } data_2_entries[data_count_2] <bgcolor=cLtPurple>;
+    }
+    
+    // Data array 3: uint array
+    uint data_count_3 <bgcolor=cLtRed>;
+    if (data_count_3 > 0) {
+        uint data_3[data_count_3] <format=hex, bgcolor=cLtRed>;
+    }
+} CAnimInfos <read=ReadAnimInfos>;
+
+string ReadAnimInfos(CAnimInfos &a) {
+    string s;
+    SPrintf(s, "Size: 0x%X, Strings: %u bytes, Arrays: %u/%u/%u", 
+            a.total_size, a.string_pool_size, 
+            a.data_count_1, a.data_count_2, a.data_count_3);
+    return s;
+}
+
+typedef struct {
+    // Note: CAttackInfos structure is unknown, need CAttackInfos::LoadRaw
+    // Placeholder for now
+    local int64 start_pos = FTell();
+    
+    // Skip unknown CAttackInfos data - we'd need to reverse engineer this
+    // For now, just mark it as unknown
+    Printf("Warning: CAttackInfos structure at 0x%X is unknown\n", start_pos);
+} CAttackInfos <bgcolor=cDkGray>;
+
+typedef struct {
+    uint damage_count <bgcolor=cLtBlue>;
+    
+    uint unknown_header <format=hex>;
+    
+    // CAttackInfos nested structure
+    CAttackInfos attack_infos;
+    
+    uint bool_0x24 <comment="Boolean flag">;
+    uint bool_0x28 <comment="Boolean flag">;
+    uint bool_0x2c <comment="Boolean flag">;
+    uint bool_0x30 <comment="Boolean flag">;
+    uint bool_0x34 <comment="Boolean flag">;
+    
+    uint damage_info_count <bgcolor=cLtYellow>;
+    if (damage_info_count > 0) {
+        struct {
+            byte data[0x44] <format=hex>;
+        } damage_infos[damage_info_count] <bgcolor=cYellow, optimize=false>;
+    }
+} CBehaviorInfos <read=ReadBehaviorInfos>;
+
+string ReadBehaviorInfos(CBehaviorInfos &b) {
+    string s;
+    SPrintf(s, "Damage Infos: %u", b.damage_info_count);
+    return s;
+}
+
+typedef struct {
+    uint bool_field <comment="Boolean flag">;
+    float field_0x04;
+    float field_0x08;
+    float field_0x0c;
+    float field_0x10;
+    float field_0x14;
+    float field_0x18;
+    float field_0x1c;
+    uint field_0x20 <format=hex>;
+    float field_0x24;
+    uint field_0x28 <format=hex>;
+    float field_0x2c;
+    uint field_0x30 <format=hex>;
+    float field_0x34;
+    
+    // Vector data 1
+    ushort has_vector_data_1 <bgcolor=cLtGreen>;
+    if (has_vector_data_1 != 0) {
+        CZVector vector_0x3c <bgcolor=cGreen>;
+        CZVector vector_0x48 <bgcolor=cGreen>;
+        float field_0x54 <bgcolor=cGreen>;
+    }
+    
+    // Vector data 2
+    ushort has_vector_data_2 <bgcolor=cLtBlue>;
+    if (has_vector_data_2 != 0) {
+        CZVector vector_0x5c <bgcolor=cBlue>;
+        CZVector vector_0x68 <bgcolor=cBlue>;
+        float field_0x74 <bgcolor=cBlue>;
+    }
+} CCharacterFXInfos <read=ReadFXInfos>;
+
+string ReadFXInfos(CCharacterFXInfos &fx) {
+    string s;
+    SPrintf(s, "Has vectors: %u, %u", fx.has_vector_data_1, fx.has_vector_data_2);
+    return s;
+}
+
+typedef struct {
+    int name_offset <format=hex, comment="Offset into string pool, -1 = null">;
+    int offset_2 <format=hex>;
+    int offset_3 <format=hex>;
+} LinkedMeshInfo <read=ReadLinkedMesh>;
+
+string ReadLinkedMesh(LinkedMeshInfo &m) {
+    string s;
+    if (m.name_offset >= 0)
+        SPrintf(s, "Name offset: 0x%X", m.name_offset);
+    else
+        SPrintf(s, "NULL");
+    return s;
+}
+
+// ============================================
+// MAIN STRUCTURE
+// ============================================
+
+struct CCharacterInfos_DAT {
+    // === HEADER ===
+    uint total_size <format=hex, bgcolor=cLtRed, comment="Total size of structure">;
+    uint flags <format=binary, bgcolor=cRed, comment="0x1=Behavior, 0x2=FX">;
+    
+    local uint has_behavior = (flags & 0x1) != 0;
+    local uint has_fx = (flags & 0x2) != 0;
+    
+    // === CHARACTER INFO ===
+    char char_id[4] <format=hex, bgcolor=cDkGray>;
+    uint string_pool_size <format=hex, bgcolor=cLtGreen, comment="Size of string pool">;
+    
+    if (string_pool_size > 0) {
+        char string_pool[string_pool_size] <bgcolor=cGreen>;
+    }
+    
+    uint field_0x14 <format=hex, bgcolor=cDkGray>;
+    uint field_0x18 <format=hex, bgcolor=cDkGray>;
+    
+    // === NESTED: CAnimInfos ===
+    CAnimInfos anim_infos <bgcolor=cLtPurple>;
+    
+    // === CHARACTER FLOATS ===
+    float field_0x88 <bgcolor=cLtYellow>;
+    float field_0x8c <bgcolor=cLtYellow>;
+    float field_0x90 <bgcolor=cLtYellow>;
+    
+    // === STRING OFFSETS ===
+    int mesh_name_offset <format=hex, bgcolor=0xffff00, comment="-1 = null, else offset into string_pool">;
+    int string_offset_0x20 <format=hex, bgcolor=0xffff00>;
+    int string_offset_0x24 <format=hex, bgcolor=0xffff00>;
+    int string_offset_0x28 <format=hex, bgcolor=0xffff00>;
+    int string_offset_0x2c <format=hex, bgcolor=0xffff00>;
+    int string_offset_0x30 <format=hex, bgcolor=0xffff00>;
+    int string_offset_0x34 <format=hex, bgcolor=0xffff00>;
+    
+    // === LINKED MESHES ===
+    uint linked_mesh_count <bgcolor=cLtBlue>;
+    if (linked_mesh_count > 0) {
+        LinkedMeshInfo linked_meshes[linked_mesh_count] <bgcolor=cBlue, optimize=false>;
+    }
+    
+    // === OPTIONAL: CBehaviorInfos ===
+    if (has_behavior) {
+        Printf("Loading CBehaviorInfos at offset 0x%X\n", FTell());
+        CBehaviorInfos behavior_infos <bgcolor=cLtRed>;
+    }
+    
+    // === OPTIONAL: CCharacterFXInfos ===
+    if (has_fx) {
+        Printf("Loading CCharacterFXInfos at offset 0x%X\n", FTell());
+        CCharacterFXInfos fx_infos <bgcolor=cLtGreen>;
+    }
+    
+} char_dat <open=true>;
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+string GetStringFromPool(int offset) {
+    if (offset < 0 || offset >= char_dat.string_pool_size)
+        return "<null>";
+    
+    local int64 old_pos = FTell();
+    local int64 pool_start = startof(char_dat.string_pool);
+    FSeek(pool_start + offset);
+    
+    local string result = ReadString(FTell());
+    FSeek(old_pos);
+    return result;
+}
+
+// ============================================
+// SUMMARY OUTPUT
+// ============================================
+/*
+Printf("\n=== CCharacterInfos DAT File ===\n");
+Printf("Total Size: 0x%X (%u bytes)\n", char_dat.total_size, char_dat.total_size);
+Printf("Flags: 0x%X (Behavior: %s, FX: %s)\n", 
+       char_dat.flags,
+       has_behavior ? "YES" : "NO",
+       has_fx ? "YES" : "NO");
+Printf("String Pool: %u bytes\n", char_dat.string_pool_size);
+Printf("Linked Meshes: %u\n", char_dat.linked_mesh_count);
+
+// Print string offsets
+Printf("\n=== String References ===\n");
+if (char_dat.mesh_name_offset >= 0)
+    Printf("Mesh Name: %s\n", GetStringFromPool(char_dat.mesh_name_offset));
+if (char_dat.string_offset_0x20 >= 0)
+    Printf("String 0x20: %s\n", GetStringFromPool(char_dat.string_offset_0x20));
+if (char_dat.string_offset_0x24 >= 0)
+    Printf("String 0x24: %s\n", GetStringFromPool(char_dat.string_offset_0x24));
+if (char_dat.string_offset_0x28 >= 0)
+    Printf("String 0x28: %s\n", GetStringFromPool(char_dat.string_offset_0x28));
+if (char_dat.string_offset_0x2c >= 0)
+    Printf("String 0x2c: %s\n", GetStringFromPool(char_dat.string_offset_0x2c));
+if (char_dat.string_offset_0x30 >= 0)
+    Printf("String 0x30: %s\n", GetStringFromPool(char_dat.string_offset_0x30));
+if (char_dat.string_offset_0x34 >= 0)
+    Printf("String 0x34: %s\n", GetStringFromPool(char_dat.string_offset_0x34));
+
+// Print linked mesh names
+if (char_dat.linked_mesh_count > 0) {
+    Printf("\n=== Linked Meshes ===\n");
+    local uint i;
+    for (i = 0; i < char_dat.linked_mesh_count; i++) {
+        if (char_dat.linked_meshes[i].name_offset >= 0) {
+            Printf("[%u] %s\n", i, GetStringFromPool(char_dat.linked_meshes[i].name_offset));
+        }
+    }
+}
+
+Printf("\n=== Animation Info ===\n");
+Printf("Anim String Pool: %u bytes\n", char_dat.anim_infos.string_pool_size);
+Printf("Data Arrays: %u, %u, %u entries\n", 
+       char_dat.anim_infos.data_count_1,
+       char_dat.anim_infos.data_count_2,
+       char_dat.anim_infos.data_count_3);
+
+if (has_behavior) {
+    Printf("\n=== Behavior Info ===\n");
+    Printf("Damage Infos: %u\n", char_dat.behavior_infos.damage_info_count);
+}
+
+if (has_fx) {
+    Printf("\n=== FX Info ===\n");
+    Printf("Has Vector Data: %u, %u\n", 
+           char_dat.fx_infos.has_vector_data_1,
+           char_dat.fx_infos.has_vector_data_2);
+}
+
+Printf("\n=== Parse Complete ===\n");
+Printf("File position: 0x%X / 0x%X\n", FTell(), FileSize());
+
+*/

@@ -1,0 +1,34 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+while (!FEof())
+{
+    uint size;
+    float a;
+    uint b;
+    uint entityType;
+    if (entityType == 2)
+        {
+            Printf("entity type 2\n");
+            }
+    if (entityType == 1)
+        {
+            uint scriptSize;
+            byte data[scriptSize - 4];
+            }
+    if (entityType == 5)
+        {
+            uint scriptSize;
+            byte data[scriptSize - 4];
+            }
+}

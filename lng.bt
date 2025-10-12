@@ -24,6 +24,10 @@ for (s=0; s < StringsCount; s++)
         short StringOrder;
         short TextID;
         uint SubStringCount;
+        ushort unk;
+        
+        char u16string[unk];
+        
         struct{
             for (ss=0; ss < SubStringCount; ss++)
             {
