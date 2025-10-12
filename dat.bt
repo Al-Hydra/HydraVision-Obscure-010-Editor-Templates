@@ -2,12 +2,12 @@
 //--- 010 Editor v14.0 Binary Template
 //
 //      File: Character DAT File Template
-//   Authors: Based on CCharacterInfos::LoadRaw + Load reverse engineering
-//   Version: 4.0 FULLY ANNOTATED
-//   Purpose: Parse .dat character files with complete field names
+//   Authors:
+//   Version: 4.0
+//   Purpose: Parse .dat character files
 //  Category: Game Files
 // File Mask: *.dat
-//  ID Bytes: [+12] // No magic, validated by structure
+//  ID Bytes: 
 //   History: 
 //   4.0 - Complete field names from all Load() functions
 //   3.0 - Complete implementation with all nested structures
