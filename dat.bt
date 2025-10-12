@@ -2,16 +2,24 @@
 //--- 010 Editor v14.0 Binary Template
 //
 //      File: Character DAT File Template
-//   Authors: 
-//   Version: 1.0
-//   Purpose: Parse .dat character files from the game
+//   Authors: Based on CCharacterInfos::LoadRaw + Load reverse engineering
+//   Version: 4.0 FULLY ANNOTATED
+//   Purpose: Parse .dat character files with complete field names
 //  Category: Game Files
 // File Mask: *.dat
-//  ID Bytes: 
+//  ID Bytes: [+12] // No magic, validated by structure
 //   History: 
+//   4.0 - Complete field names from all Load() functions
+//   3.0 - Complete implementation with all nested structures
+//   2.0 - Added correct variable names from CCharacterInfos::Load
+//   1.0 - Initial version
 //------------------------------------------------
 
 LittleEndian();
+
+// ============================================
+// HELPER STRUCTURES
+// ============================================
 
 typedef struct {
     float x;
@@ -25,137 +33,295 @@ string ReadCZVector(CZVector &v) {
     return s;
 }
 
-
-
-typedef struct {
-    uint total_size <format=hex, bgcolor=cLtBlue>;
-    uint reserved <hidden=true>;
-    char char_id[4] <format=hex>;
-    char anim_id[4] <format=hex>;
-    
-    // String pool
-    uint string_pool_size <format=hex, bgcolor=cLtGreen>;
-    if (string_pool_size > 0) {
-        char anim_string_pool[string_pool_size] <bgcolor=cLtGreen>;
-    }
-    
-    // Data array 1: offsets and flags
-    uint data_count_1 <bgcolor=cLtYellow>;
-    if (data_count_1 > 0) {
-        uint data_1_offsets[data_count_1] <format=hex, bgcolor=cLtYellow>;
-        byte data_1_flags[data_count_1] <bgcolor=cYellow>;
-    }
-    
-    // Data array 2: 16-byte entries
-    uint data_count_2 <bgcolor=cLtPurple>;
-    if (data_count_2 > 0) {
-        struct {
-            byte data[16] <format=hex>;
-        } data_2_entries[data_count_2] <bgcolor=cLtPurple>;
-    }
-    
-    // Data array 3: uint array
-    uint data_count_3 <bgcolor=cLtRed>;
-    if (data_count_3 > 0) {
-        uint data_3[data_count_3] <format=hex, bgcolor=cLtRed>;
-    }
-} CAnimInfos <read=ReadAnimInfos>;
-
-string ReadAnimInfos(CAnimInfos &a) {
-    string s;
-    SPrintf(s, "Size: 0x%X, Strings: %u bytes, Arrays: %u/%u/%u", 
-            a.total_size, a.string_pool_size, 
-            a.data_count_1, a.data_count_2, a.data_count_3);
+string ID2String(uint id) {
+    local string s;
+    local char c1 = (id >> 24) & 0xFF;
+    local char c2 = (id >> 16) & 0xFF;
+    local char c3 = (id >> 8) & 0xFF;
+    local char c4 = id & 0xFF;
+    SPrintf(s, "%c%c%c%c", c1, c2, c3, c4);
     return s;
 }
 
+// ============================================
+// DAMAGE INFO (0x44 / 68 bytes per entry)
+// ============================================
+
 typedef struct {
-    // Note: CAttackInfos structure is unknown, need CAttackInfos::LoadRaw
-    // Placeholder for now
-    local int64 start_pos = FTell();
+    uint damage_type <comment="Type of damage">;
+    uint flag <comment="Damage flags">;
+    uint front_anim_id <format=hex, comment="Front hit animation">;
+    uint back_anim_id <format=hex, comment="Back hit animation">;
+    uint unknown_0x10 <format=hex>;
+    uint start_anim_id <format=hex, comment="Start animation">;
+    uint cycle_anim_id <format=hex, comment="Cycle animation">;
+    uint stop_anim_id <format=hex, comment="Stop animation">;
+    uint unknown_0x20 <format=hex>;
+    uint front2_anim_id <format=hex, comment="Front hit animation (alternate)">;
+    uint back2_anim_id <format=hex, comment="Back hit animation (alternate)">;
+    uint roten <comment="Rotation enabled (bool)">;
+    uint dodge <comment="Can dodge (bool)">;
+    uint bdodge <comment="Back dodge (bool)">;
+    uint dvalue <comment="Damage value multiplier">;
+    uint stopmove <comment="Stop movement (bool)">;
+    uint unknown_0x40 <format=hex>;
+} CDamageInfo <read=ReadDamageInfo>;
+
+string ReadDamageInfo(CDamageInfo &d) {
+    string s;
+    SPrintf(s, "Type:%u, Front:%s, Back:%s", 
+            d.damage_type, 
+            ID2String(d.front_anim_id), 
+            ID2String(d.back_anim_id));
+    return s;
+}
+
+// ============================================
+// COLLISION INFO (variable size, allocated as 0x18)
+// ============================================
+
+typedef struct {
+    // Bone name as variable-length string
+    int bone_name_length;
+    if (bone_name_length > 0) {
+        char bone_name[bone_name_length];
+    }
     
-    // Skip unknown CAttackInfos data - we'd need to reverse engineer this
-    // For now, just mark it as unknown
-    Printf("Warning: CAttackInfos structure at 0x%X is unknown\n", start_pos);
-} CAttackInfos <bgcolor=cDkGray>;
+    uint end_frame <comment="End frame of collision">;
+    uint start_frame <comment="Start frame of collision">;
+    int hit_type <comment="Hit effect type">;
+    int priority <comment="Collision priority">;
+} CCollisionInfo <read=ReadCollisionInfo>;
+
+string ReadCollisionInfo(CCollisionInfo &c) {
+    string s;
+    if (c.bone_name_length > 0)
+        SPrintf(s, "%s [%u-%u] pri:%d", c.bone_name, c.start_frame, c.end_frame, c.priority);
+    else
+        SPrintf(s, "<no name> [%u-%u] pri:%d", c.start_frame, c.end_frame, c.priority);
+    return s;
+}
+
+// ============================================
+// ATTACK INFO (0x70 / 112 bytes per entry)
+// ============================================
+
+typedef struct {
+    uint unknown_header <format=hex>;
+    uint enable <comment="Attack enabled (bool)">;
+    uint anim_id <format=hex, comment="Attack animation ID">;
+    uint unknown_0x0C <format=hex>;
+    uint delay <comment="Delay before next attack (ms)">;
+    uint frequency <comment="Attack frequency/cooldown">;
+    float damage_easy <comment="Damage on easy difficulty">;
+    uint translate <comment="Enable translation (bool)">;
+    uint validate <comment="Require validation (bool)">;
+    uint turn <comment="Allow turning (bool)">;
+    uint walkable <comment="Check walkable surface (bool)">;
+    
+    // Catch section (from <catch>)
+    uint has_catch <comment="Has catch position data">;
+    uint catch_front <comment="Catch from front (bool)">;
+    CZVector catch_pos <comment="Catch position offset (x,y,z)">;
+    
+    // Cycle section (from <cycle>)
+    uint has_cycle <comment="Has cycle animations">;
+    uint cycle_success_id <format=hex, comment="Success animation (cycle->success)">;
+    uint cycle_success_chain_id <format=hex, comment="Success chain (cycle->succha)">;
+    uint cycle_fight_id <format=hex, comment="Fight animation (cycle->fight)">;
+    uint cycle_fight_chain_id <format=hex, comment="Fight chain (cycle->fightcha)">;
+    uint cycle_failed_id <format=hex, comment="Failed animation (cycle->failed)">;
+    uint cycle_end_id <format=hex, comment="End animation (cycle->end)">;
+    
+    // Check section (from <check>)
+    float check_distance <comment="Check distance (check->distance)">;
+    float check_y <comment="Check Y coordinate (check->y)">;
+    float check_radius <comment="Check radius (check->radius)">;
+    
+    // Collision checks (from <colcheck>)
+    uint collision_count <bgcolor=cLtYellow, comment="Number of collision checks">;
+    if (collision_count > 0) {
+        CCollisionInfo collisions[collision_count] <bgcolor=cYellow, optimize=false>;
+    }
+} CAttackInfo <read=ReadAttackInfo>;
+
+string ReadAttackInfo(CAttackInfo &a) {
+    string s;
+    SPrintf(s, "Anim: %s, Dmg: %.1f, Cols: %u, Enable: %u", 
+            ID2String(a.anim_id), a.damage_easy, a.collision_count, a.enable);
+    return s;
+}
+
+// ============================================
+// ATTACK INFOS CONTAINER
+// ============================================
+
+typedef struct {
+    uint unknown_header <format=hex>;
+    uint character_id <format=hex, comment="Character ID">;
+    uint dodge <comment="Can dodge attacks (bool, from attacks->dodge)">;
+    uint othersnpc <comment="Affects other NPCs (bool, from attacks->othersnpc)">;
+    
+    uint attack_count <bgcolor=cLtBlue, comment="Number of attack definitions">;
+    if (attack_count > 0) {
+        CAttackInfo attacks[attack_count] <bgcolor=cBlue, optimize=false, comment="Attack definitions from <attack> nodes">;
+    }
+} CAttackInfos <read=ReadAttackInfos>;
+
+string ReadAttackInfos(CAttackInfos &a) {
+    string s;
+    SPrintf(s, "Attacks: %u, CharID: %s, Dodge: %u", 
+            a.attack_count, ID2String(a.character_id), a.dodge);
+    return s;
+}
+
+// ============================================
+// BEHAVIOR INFO
+// ============================================
 
 typedef struct {
     uint damage_count <bgcolor=cLtBlue>;
     
     uint unknown_header <format=hex>;
     
-    // CAttackInfos nested structure
-    CAttackInfos attack_infos;
+    // CAttackInfos nested structure (from <attacks>)
+    CAttackInfos attack_infos <bgcolor=cLtGray>;
     
-    uint bool_0x24 <comment="Boolean flag">;
-    uint bool_0x28 <comment="Boolean flag">;
-    uint bool_0x2c <comment="Boolean flag">;
-    uint bool_0x30 <comment="Boolean flag">;
-    uint bool_0x34 <comment="Boolean flag">;
+    // Boolean flags from <behavior>
+    uint scream <comment="Can scream (behavior->scream)">;
+    uint fear_fire <comment="Fears fire (fears->fire)">;
+    uint fear_elec <comment="Fears electricity (fears->elec)">;
+    uint fear_light <comment="Fears light (fears->light)">;
+    uint rotcomplex <comment="Complex rotation (behavior->rotcomplex)">;
     
-    uint damage_info_count <bgcolor=cLtYellow>;
+    // Damage info array from <damages>
+    uint damage_info_count <bgcolor=cLtYellow, comment="Number of damage reaction types">;
     if (damage_info_count > 0) {
-        struct {
-            byte data[0x44] <format=hex>;
-        } damage_infos[damage_info_count] <bgcolor=cYellow, optimize=false>;
+        CDamageInfo damage_infos[damage_info_count] <bgcolor=cYellow, optimize=false, comment="Damage reactions from <damage> nodes">;
     }
 } CBehaviorInfos <read=ReadBehaviorInfos>;
 
 string ReadBehaviorInfos(CBehaviorInfos &b) {
     string s;
-    SPrintf(s, "Damage Infos: %u", b.damage_info_count);
+    SPrintf(s, "Attacks: %u, Damages: %u, Scream: %u", 
+            b.attack_infos.attack_count, b.damage_info_count, b.scream);
     return s;
 }
 
+// ============================================
+// CHARACTER FX INFO (from <fx>)
+// ============================================
+
 typedef struct {
-    uint bool_field <comment="Boolean flag">;
-    float field_0x04;
-    float field_0x08;
-    float field_0x0c;
-    float field_0x10;
-    float field_0x14;
-    float field_0x18;
-    float field_0x1c;
-    uint field_0x20 <format=hex>;
-    float field_0x24;
-    uint field_0x28 <format=hex>;
-    float field_0x2c;
-    uint field_0x30 <format=hex>;
-    float field_0x34;
+    // Dark Aura section (from <darkAura>)
+    uint has_dark_aura <comment="Has dark aura effect (bool)">;
+    float dark_aura_particle_size <comment="darkAura->particleSize">;
+    float dark_aura_spawn_rate <comment="darkAura->spawnRate">;
+    float dark_aura_speed <comment="darkAura->speed">;
+    float dark_aura_lifetime <comment="darkAura->lifeTime">;
+    float dark_aura_darkness <comment="darkAura->darkness">;
+    float dark_aura_anticipation <comment="darkAura->anticipation">;
     
-    // Vector data 1
-    ushort has_vector_data_1 <bgcolor=cLtGreen>;
-    if (has_vector_data_1 != 0) {
-        CZVector vector_0x3c <bgcolor=cGreen>;
-        CZVector vector_0x48 <bgcolor=cGreen>;
-        float field_0x54 <bgcolor=cGreen>;
+    // Blood section (from <blood>)
+    float blood_gun_scale <comment="blood->gun->scale">;
+    uint blood_gun_system <comment="blood->gun->system (particle system ID)">;
+    float blood_shotgun_scale <comment="blood->shotgun->scale">;
+    uint blood_shotgun_system <comment="blood->shotgun->system">;
+    float blood_uzi_scale <comment="blood->uzi->scale">;
+    uint blood_uzi_system <comment="blood->uzi->system">;
+    float blood_uzi_radius <comment="blood->uzi->radius">;
+    
+    // Corpse Shadow - Death01 (from <corpseShadow><death01>)
+    uint corpse_shadow_death01_enabled <comment="corpseShadow->death01 present">;
+    if (corpse_shadow_death01_enabled) {
+        CZVector death01_scale <comment="death01->scale (X,Y,Z)">;
+        CZVector death01_offset <comment="death01->offset (X,Y,Z)">;
+        float death01_rotation_angle <comment="death01->rotation->angle">;
     }
     
-    // Vector data 2
-    ushort has_vector_data_2 <bgcolor=cLtBlue>;
-    if (has_vector_data_2 != 0) {
-        CZVector vector_0x5c <bgcolor=cBlue>;
-        CZVector vector_0x68 <bgcolor=cBlue>;
-        float field_0x74 <bgcolor=cBlue>;
+    // Corpse Shadow - Death02 (from <corpseShadow><death02>)
+    uint corpse_shadow_death02_enabled <comment="corpseShadow->death02 present">;
+    if (corpse_shadow_death02_enabled) {
+        CZVector death02_scale <comment="death02->scale (X,Y,Z)">;
+        CZVector death02_offset <comment="death02->offset (X,Y,Z)">;
+        float death02_rotation_angle <comment="death02->rotation->angle">;
     }
 } CCharacterFXInfos <read=ReadFXInfos>;
 
 string ReadFXInfos(CCharacterFXInfos &fx) {
     string s;
-    SPrintf(s, "Has vectors: %u, %u", fx.has_vector_data_1, fx.has_vector_data_2);
+    SPrintf(s, "DarkAura: %u, Shadows: %u/%u", 
+            fx.has_dark_aura, 
+            fx.corpse_shadow_death01_enabled, 
+            fx.corpse_shadow_death02_enabled);
     return s;
 }
 
-typedef struct {
-    int name_offset <format=hex, comment="Offset into string pool, -1 = null">;
-    int offset_2 <format=hex>;
-    int offset_3 <format=hex>;
-} LinkedMeshInfo <read=ReadLinkedMesh>;
+// ============================================
+// ANIM INFO
+// ============================================
 
-string ReadLinkedMesh(LinkedMeshInfo &m) {
+typedef struct {
+    uint total_size <format=hex, bgcolor=cLtBlue, comment="Size of CAnimInfos block">;
+    uint reserved <hidden=true>;
+    uint code <format=hex, comment="Animation set code (anims->code)">;
+    uint anim_file_code <format=hex, comment="Animation file code (anim_file->code)">;
+    
+    // String pool for animation data
+    uint anim_string_pool_size <format=hex, bgcolor=cLtGreen, comment="Animation string pool size">;
+    if (anim_string_pool_size > 0) {
+        char anim_string_pool[anim_string_pool_size] <bgcolor=cGreen>;
+    }
+    
+    // Animation data arrays (from <anim> and <specific>)
+    uint anim_data_count_1 <bgcolor=cLtYellow, comment="Condition count (from <condition>)">;
+    if (anim_data_count_1 > 0) {
+        uint condition_codes[anim_data_count_1] <format=hex, bgcolor=cLtYellow, comment="Condition codes (condition->code)">;
+        byte condition_types[anim_data_count_1] <bgcolor=cYellow, comment="0=?, 1=?, 2=level, 3=?">;
+    }
+    
+    uint anim_data_count_2 <bgcolor=cLtPurple, comment="Animation info count (from <anim>)">;
+    if (anim_data_count_2 > 0) {
+        struct CAnimInfo {
+            char anim_id[4];
+            local string reversedCode = anim_id;
+            reversedCode = reverse(reversedCode);
+            short anim_name_offset;
+            short anim_path_offset;
+            short val3;
+            short val4;
+            float test;
+        } anim_infos[anim_data_count_2] <bgcolor=cLtPurple, optimize=false, read = reversedCode, comment="Animation definitions (0x10 bytes each)">;
+    }
+    
+    uint anim_data_count_3 <bgcolor=cLtRed, comment="Specific animation count (from <specific>)">;
+    if (anim_data_count_3 > 0) {
+        uint specific_data[anim_data_count_3] <format=hex, bgcolor=cLtRed, comment="Specific animation data (conditions + anim indices)">;
+    }
+} CAnimInfos <read=ReadAnimInfos>;
+
+string ReadAnimInfos(CAnimInfos &a) {
     string s;
-    if (m.name_offset >= 0)
-        SPrintf(s, "Name offset: 0x%X", m.name_offset);
+    SPrintf(s, "Code: %s, Conditions: %u, Anims: %u, Specific: %u", 
+            ID2String(a.code),
+            a.anim_data_count_1, a.anim_data_count_2, a.anim_data_count_3);
+    return s;
+}
+
+// ============================================
+// LINKED MESH INFO
+// ============================================
+
+typedef struct {
+    int mesh_name_offset <format=hex, comment="Offset to mesh name (linked->mesh->name)">;
+    int mesh_path_offset <format=hex, comment="Offset to mesh path (linked->mesh->path)">;
+    int bone_name_offset <format=hex, comment="Offset to bone name (linked->mesh->bone)">;
+} CLinkedMeshInfo <read=ReadLinkedMesh>;
+
+string ReadLinkedMesh(CLinkedMeshInfo &m) {
+    string s;
+    if (m.mesh_name_offset >= 0)
+        SPrintf(s, "Mesh offset: 0x%X", m.mesh_name_offset);
     else
         SPrintf(s, "NULL");
     return s;
@@ -164,59 +330,62 @@ string ReadLinkedMesh(LinkedMeshInfo &m) {
 // ============================================
 // MAIN STRUCTURE
 // ============================================
-
+local uint cLtCyan = 0xffff00;
 struct CCharacterInfos_DAT {
     // === HEADER ===
     uint total_size <format=hex, bgcolor=cLtRed, comment="Total size of structure">;
-    uint flags <format=binary, bgcolor=cRed, comment="0x1=Behavior, 0x2=FX">;
+    uint flags <format=binary, bgcolor=cRed, comment="0x1=has behavior, 0x2=has FX">;
     
     local uint has_behavior = (flags & 0x1) != 0;
     local uint has_fx = (flags & 0x2) != 0;
     
     // === CHARACTER INFO ===
-    char char_id[4] <format=hex, bgcolor=cDkGray>;
+    uint character_code <format=hex, bgcolor=cYellow, comment="Character ID code (4-char, from code attribute)">;
+    
+    // String pool for character data
     uint string_pool_size <format=hex, bgcolor=cLtGreen, comment="Size of string pool">;
-    
     if (string_pool_size > 0) {
-        char string_pool[string_pool_size] <bgcolor=cGreen>;
+        char string_pool[string_pool_size] <bgcolor=cGreen, comment="String pool with null-terminated strings">;
     }
     
-    uint field_0x14 <format=hex, bgcolor=cDkGray>;
-    uint field_0x18 <format=hex, bgcolor=cDkGray>;
+    uint nb_anims <bgcolor=cLtCyan, comment="Number of animations (nbAnims)">;
+    uint nb_anims_in_use <bgcolor=cLtCyan, comment="Number of animations in use (nbAnimsInUse)">;
     
-    // === NESTED: CAnimInfos ===
-    CAnimInfos anim_infos <bgcolor=cLtPurple>;
+    // === NESTED: CAnimInfos (from <anims>) ===
+    CAnimInfos anim_infos <bgcolor=cLtPurple, comment="Animation information from <anims> section">;
     
-    // === CHARACTER FLOATS ===
-    float field_0x88 <bgcolor=cLtYellow>;
-    float field_0x8c <bgcolor=cLtYellow>;
-    float field_0x90 <bgcolor=cLtYellow>;
+    // === GAMEPLAY: Life values (from <gameplay><life>) ===
+    float life_easy <bgcolor=cLtYellow, comment="Life points on easy (gameplay->life->easy)">;
+    float life_normal <bgcolor=cLtYellow, comment="Life points on normal (gameplay->life->normal)">;
+    float life_hard <bgcolor=cLtYellow, comment="Life points on hard (gameplay->life->hard)">;
     
-    // === STRING OFFSETS ===
-    int mesh_name_offset <format=hex, bgcolor=0xffff00, comment="-1 = null, else offset into string_pool">;
-    int string_offset_0x20 <format=hex, bgcolor=0xffff00>;
-    int string_offset_0x24 <format=hex, bgcolor=0xffff00>;
-    int string_offset_0x28 <format=hex, bgcolor=0xffff00>;
-    int string_offset_0x2c <format=hex, bgcolor=0xffff00>;
-    int string_offset_0x30 <format=hex, bgcolor=0xffff00>;
-    int string_offset_0x34 <format=hex, bgcolor=0xffff00>;
+    // === STRING OFFSETS: Skeleton section (from <skeleton>) ===
+    int skeleton_name_offset <format=hex, bgcolor=cLtCyan, comment="skeleton->name">;
+    int skeleton_path_offset <format=hex, bgcolor=cLtCyan, comment="skeleton->path">;
+    int skin_name_offset <format=hex, bgcolor=cLtCyan, comment="skeleton->skin->name">;
     
-    // === LINKED MESHES ===
-    uint linked_mesh_count <bgcolor=cLtBlue>;
+    // === STRING OFFSETS: Hair section (from <hair>) ===
+    int hair_skel_name_offset <format=hex, bgcolor=cAqua, comment="hair->skel_name">;
+    int hair_path_offset <format=hex, bgcolor=cAqua, comment="hair->path">;
+    int hair_skin_name_offset <format=hex, bgcolor=cAqua, comment="hair->skin_name">;
+    int hair_ref_bone_offset <format=hex, bgcolor=cAqua, comment="hair->ref_bone">;
+    
+    // === LINKED MESHES (from <linked>) ===
+    uint linked_mesh_count <bgcolor=cLtBlue, comment="Number of linked meshes">;
     if (linked_mesh_count > 0) {
-        LinkedMeshInfo linked_meshes[linked_mesh_count] <bgcolor=cBlue, optimize=false>;
+        CLinkedMeshInfo linked_meshes[linked_mesh_count] <bgcolor=cBlue, optimize=false, comment="Linked mesh information from <mesh> nodes">;
     }
     
-    // === OPTIONAL: CBehaviorInfos ===
+    // === OPTIONAL: CBehaviorInfos (from <behavior>) ===
     if (has_behavior) {
         Printf("Loading CBehaviorInfos at offset 0x%X\n", FTell());
-        CBehaviorInfos behavior_infos <bgcolor=cLtRed>;
+        CBehaviorInfos behavior_infos <bgcolor=cLtRed, comment="Behavior and attack information from <behavior> section">;
     }
     
-    // === OPTIONAL: CCharacterFXInfos ===
+    // === OPTIONAL: CCharacterFXInfos (from <fx>) ===
     if (has_fx) {
         Printf("Loading CCharacterFXInfos at offset 0x%X\n", FTell());
-        CCharacterFXInfos fx_infos <bgcolor=cLtGreen>;
+        CCharacterFXInfos fx_infos <bgcolor=cLtGreen, comment="Visual effects information from <fx> section">;
     }
     
 } char_dat <open=true>;
@@ -238,67 +407,192 @@ string GetStringFromPool(int offset) {
     return result;
 }
 
+string GetStringFromAnimPool(int offset) {
+    if (offset < 0 || offset >= char_dat.anim_infos.anim_string_pool_size)
+        return "<null>";
+    
+    local int64 old_pos = FTell();
+    local int64 pool_start = startof(char_dat.anim_infos.anim_string_pool);
+    FSeek(pool_start + offset);
+    
+    local string result = ReadString(FTell());
+    FSeek(old_pos);
+    return result;
+}
+
+string reverse(string str) {
+    local int len = sizeof(str);
+    local int i;
+    local char temp;
+    for (i = 0; i < len / 2; i++) {
+        temp = str[i];
+        str[i] = str[len - i - 1];
+        str[len - i - 1] = temp;
+    }
+    
+    local string newstring = str;
+    return newstring;
+}
+
 // ============================================
 // SUMMARY OUTPUT
 // ============================================
-/*
-Printf("\n=== CCharacterInfos DAT File ===\n");
+
+Printf("\n========================================\n");
+Printf("    CCharacterInfos DAT File Parser\n");
+Printf("========================================\n");
+Printf("\n=== File Header ===\n");
 Printf("Total Size: 0x%X (%u bytes)\n", char_dat.total_size, char_dat.total_size);
-Printf("Flags: 0x%X (Behavior: %s, FX: %s)\n", 
-       char_dat.flags,
-       has_behavior ? "YES" : "NO",
-       has_fx ? "YES" : "NO");
+Printf("Character Code: 0x%08X (%s)\n", char_dat.character_code, ID2String(char_dat.character_code));
+Printf("Flags: 0x%X\n", char_dat.flags);
+Printf("  - Has Behavior: %s\n", (char_dat.flags & 0x1) ? "YES" : "NO");
+Printf("  - Has FX: %s\n", (char_dat.flags & 0x2) ? "YES" : "NO");
 Printf("String Pool: %u bytes\n", char_dat.string_pool_size);
-Printf("Linked Meshes: %u\n", char_dat.linked_mesh_count);
+Printf("Animations: %u total, %u in use\n", char_dat.nb_anims, char_dat.nb_anims_in_use);
 
-// Print string offsets
-Printf("\n=== String References ===\n");
-if (char_dat.mesh_name_offset >= 0)
-    Printf("Mesh Name: %s\n", GetStringFromPool(char_dat.mesh_name_offset));
-if (char_dat.string_offset_0x20 >= 0)
-    Printf("String 0x20: %s\n", GetStringFromPool(char_dat.string_offset_0x20));
-if (char_dat.string_offset_0x24 >= 0)
-    Printf("String 0x24: %s\n", GetStringFromPool(char_dat.string_offset_0x24));
-if (char_dat.string_offset_0x28 >= 0)
-    Printf("String 0x28: %s\n", GetStringFromPool(char_dat.string_offset_0x28));
-if (char_dat.string_offset_0x2c >= 0)
-    Printf("String 0x2c: %s\n", GetStringFromPool(char_dat.string_offset_0x2c));
-if (char_dat.string_offset_0x30 >= 0)
-    Printf("String 0x30: %s\n", GetStringFromPool(char_dat.string_offset_0x30));
-if (char_dat.string_offset_0x34 >= 0)
-    Printf("String 0x34: %s\n", GetStringFromPool(char_dat.string_offset_0x34));
+Printf("\n=== Gameplay (Life Points) ===\n");
+Printf("Easy: %.2f\n", char_dat.life_easy);
+Printf("Normal: %.2f\n", char_dat.life_normal);
+Printf("Hard: %.2f\n", char_dat.life_hard);
 
-// Print linked mesh names
+Printf("\n=== Skeleton ===\n");
+if (char_dat.skeleton_name_offset >= 0)
+    Printf("Name: %s\n", GetStringFromPool(char_dat.skeleton_name_offset));
+if (char_dat.skeleton_path_offset >= 0)
+    Printf("Path: %s\n", GetStringFromPool(char_dat.skeleton_path_offset));
+if (char_dat.skin_name_offset >= 0)
+    Printf("Skin: %s\n", GetStringFromPool(char_dat.skin_name_offset));
+
+Printf("\n=== Hair ===\n");
+local int hair_count = 0;
+if (char_dat.hair_skel_name_offset >= 0) {
+    Printf("Skeleton: %s\n", GetStringFromPool(char_dat.hair_skel_name_offset));
+    hair_count++;
+}
+if (char_dat.hair_path_offset >= 0) {
+    Printf("Path: %s\n", GetStringFromPool(char_dat.hair_path_offset));
+    hair_count++;
+}
+if (char_dat.hair_skin_name_offset >= 0) {
+    Printf("Skin: %s\n", GetStringFromPool(char_dat.hair_skin_name_offset));
+    hair_count++;
+}
+if (char_dat.hair_ref_bone_offset >= 0) {
+    Printf("Ref Bone: %s\n", GetStringFromPool(char_dat.hair_ref_bone_offset));
+    hair_count++;
+}
+if (hair_count == 0)
+    Printf("(none)\n");
+
 if (char_dat.linked_mesh_count > 0) {
-    Printf("\n=== Linked Meshes ===\n");
+    Printf("\n=== Linked Meshes (%u) ===\n", char_dat.linked_mesh_count);
     local uint i;
     for (i = 0; i < char_dat.linked_mesh_count; i++) {
-        if (char_dat.linked_meshes[i].name_offset >= 0) {
-            Printf("[%u] %s\n", i, GetStringFromPool(char_dat.linked_meshes[i].name_offset));
+        Printf("[%u] ", i);
+        if (char_dat.linked_meshes[i].mesh_name_offset >= 0)
+            Printf("%s @ ", GetStringFromPool(char_dat.linked_meshes[i].mesh_name_offset));
+        if (char_dat.linked_meshes[i].mesh_path_offset >= 0)
+            Printf("%s ", GetStringFromPool(char_dat.linked_meshes[i].mesh_path_offset));
+        if (char_dat.linked_meshes[i].bone_name_offset >= 0)
+            Printf("(bone: %s)", GetStringFromPool(char_dat.linked_meshes[i].bone_name_offset));
+        Printf("\n");
+    }
+}
+
+Printf("\n=== Animations ===\n");
+Printf("Code: %s\n", ID2String(char_dat.anim_infos.code));
+Printf("Anim File: %s\n", ID2String(char_dat.anim_infos.anim_file_code));
+Printf("String Pool: %u bytes\n", char_dat.anim_infos.anim_string_pool_size);
+Printf("Conditions: %u\n", char_dat.anim_infos.anim_data_count_1);
+Printf("Animation Infos: %u\n", char_dat.anim_infos.anim_data_count_2);
+Printf("Specific Anims: %u\n", char_dat.anim_infos.anim_data_count_3);
+
+local string animCode;
+local string animName;
+local string animPath;
+if (char_dat.anim_infos.anim_data_count_2 > 0) {
+    Printf("\n--- Animation List (%u entries) ---\n", char_dat.anim_infos.anim_data_count_2);
+
+    for (i = 0; i < char_dat.anim_infos.anim_data_count_2; i++) {
+        animCode = char_dat.anim_infos.anim_infos[i].reversedCode;
+        animName = GetStringFromAnimPool(char_dat.anim_infos.anim_infos[i].anim_name_offset);
+        animPath = GetStringFromAnimPool(char_dat.anim_infos.anim_infos[i].anim_path_offset);
+        
+        Printf("[%03u] Code:%s  Name:%s  Path:%s  v3:%d  v4:%d  Test:%.3f\n",
+               i,
+               animCode,
+               animName,
+               animPath,
+               char_dat.anim_infos.anim_infos[i].val3,
+               char_dat.anim_infos.anim_infos[i].val4,
+               char_dat.anim_infos.anim_infos[i].test);
+        
+        // limit preview
+        if (i >= 30 && char_dat.anim_infos.anim_data_count_2 > 35) {
+            Printf("... (%u more entries omitted)\n", char_dat.anim_infos.anim_data_count_2 - i - 1);
+            break;
         }
     }
 }
 
-Printf("\n=== Animation Info ===\n");
-Printf("Anim String Pool: %u bytes\n", char_dat.anim_infos.string_pool_size);
-Printf("Data Arrays: %u, %u, %u entries\n", 
-       char_dat.anim_infos.data_count_1,
-       char_dat.anim_infos.data_count_2,
-       char_dat.anim_infos.data_count_3);
-
-if (has_behavior) {
-    Printf("\n=== Behavior Info ===\n");
-    Printf("Damage Infos: %u\n", char_dat.behavior_infos.damage_info_count);
+if (char_dat.flags & 0x1) {
+    Printf("\n=== Behavior ===\n");
+    Printf("Can Scream: %s\n", char_dat.behavior_infos.scream ? "YES" : "NO");
+    Printf("Complex Rotation: %s\n", char_dat.behavior_infos.rotcomplex ? "YES" : "NO");
+    Printf("Fears: Fire=%u, Electricity=%u, Light=%u\n",
+           char_dat.behavior_infos.fear_fire,
+           char_dat.behavior_infos.fear_elec,
+           char_dat.behavior_infos.fear_light);
+    
+    Printf("\n--- Attacks (%u) ---\n", char_dat.behavior_infos.attack_infos.attack_count);
+    Printf("Can Dodge: %s\n", char_dat.behavior_infos.attack_infos.dodge ? "YES" : "NO");
+    Printf("Affects Other NPCs: %s\n", char_dat.behavior_infos.attack_infos.othersnpc ? "YES" : "NO");
+    
+    if (char_dat.behavior_infos.attack_infos.attack_count > 0) {
+        local uint j;
+        for (j = 0; j < char_dat.behavior_infos.attack_infos.attack_count && j < 5; j++) {
+            Printf("  [%u] Anim: %s, Damage: %.1f, Delay: %ums, Enabled: %u\n", 
+                   j,
+                   ID2String(char_dat.behavior_infos.attack_infos.attacks[j].anim_id),
+                   char_dat.behavior_infos.attack_infos.attacks[j].damage_easy,
+                   char_dat.behavior_infos.attack_infos.attacks[j].delay,
+                   char_dat.behavior_infos.attack_infos.attacks[j].enable);
+        }
+        if (char_dat.behavior_infos.attack_infos.attack_count > 5)
+            Printf("  ... and %u more\n", char_dat.behavior_infos.attack_infos.attack_count - 5);
+    }
+    
+    Printf("\n--- Damage Reactions (%u) ---\n", char_dat.behavior_infos.damage_info_count);
+    if (char_dat.behavior_infos.damage_info_count > 0) {
+        for (j = 0; j < char_dat.behavior_infos.damage_info_count && j < 5; j++) {
+            Printf("  [%u] Type: %u, Front: %s, Back: %s\n",
+                   j,
+                   char_dat.behavior_infos.damage_infos[j].damage_type,
+                   ID2String(char_dat.behavior_infos.damage_infos[j].front_anim_id),
+                   ID2String(char_dat.behavior_infos.damage_infos[j].back_anim_id));
+        }
+        if (char_dat.behavior_infos.damage_info_count > 5)
+            Printf("  ... and %u more\n", char_dat.behavior_infos.damage_info_count - 5);
+    }
 }
 
-if (has_fx) {
-    Printf("\n=== FX Info ===\n");
-    Printf("Has Vector Data: %u, %u\n", 
-           char_dat.fx_infos.has_vector_data_1,
-           char_dat.fx_infos.has_vector_data_2);
+if (char_dat.flags & 0x2) {
+    Printf("\n=== Visual Effects ===\n");
+    Printf("Dark Aura: %s\n", char_dat.fx_infos.has_dark_aura ? "YES" : "NO");
+    if (char_dat.fx_infos.has_dark_aura) {
+        Printf("  Particle Size: %.2f\n", char_dat.fx_infos.dark_aura_particle_size);
+        Printf("  Spawn Rate: %.2f\n", char_dat.fx_infos.dark_aura_spawn_rate);
+    }
+    Printf("Corpse Shadows: Death01=%u, Death02=%u\n",
+           char_dat.fx_infos.corpse_shadow_death01_enabled,
+           char_dat.fx_infos.corpse_shadow_death02_enabled);
 }
 
-Printf("\n=== Parse Complete ===\n");
-Printf("File position: 0x%X / 0x%X\n", FTell(), FileSize());
-
-*/
+Printf("\n========================================\n");
+Printf("Parse Complete: 0x%X / 0x%X bytes\n", FTell(), FileSize());
+if (FTell() != FileSize()) {
+    Printf("WARNING: %d bytes remaining!\n", FileSize() - FTell());
+} else {
+    Printf("Perfect parse - no bytes remaining!\n");
+}
+Printf("========================================\n");
