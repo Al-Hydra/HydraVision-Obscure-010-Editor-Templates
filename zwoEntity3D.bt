@@ -10,69 +10,57 @@
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
+
 typedef struct{
     struct ReadMaterials MatNames;
     
     uint flags1;
     //Printf("flags1 = %d\n", flags1);
     uint flags2;
-    uint unk1;
+    uint unk;
     
-    local uint local1 = flags1 >> 3 & 1;
-    local uint local2 = flags2 >> 4 & 1;
-    local int readExtra = 0;
+    // Flags from flags1
+    local int HasGeometry = (flags1 & 0x1) != 0;
+    local int HasInstance = (flags1 & 0x2) != 0;
+    local int HasParentSibling = (flags1 & 0x4) != 0;
+    local int readExtra = (flags1 & 0x8) != 0;  // Used in mesh
+    local int HasAnimFrame = (flags1 & 0x20) != 0;
+    local int HasExtraInt = (flags1 & 0x40) != 0;
+
+    // Flags from flags2
+    local int DisableSomething = (flags2 & 0x10000) != 0;  // Sets offset 0x50 to 0
+    local int EnableSomething = (flags2 & 0x20000) != 0;   // Sets offset 0x54 to 1
     
-    //Printf("local1 = %d\n", local1);
-    //Printf("local2 = %d\n", local2);
-
-    if ( (flags2 & 0x10000) != 0)
+    // Derived flags stored in structure
+    local int Flag88 = (flags1 >> 3) & 1;  // offset 0x88
+    local int Flag8C = (flags1 >> 4) & 1;  // offset 0x8c
+    
+    
+    if ( HasParentSibling )
     {
-        //Printf("0x10000 flag\n");
-        local uint value1 = 0;
-    }
-
-    if ( (flags2 & 0x20000) != 0)
-    {
-        //Printf("0x20000 flag\n");
-        local uint value2 = 1;
-    }
-
-    if ( (flags1 & 4) != 0)
-    {
-        //Printf("0x4 flag\n");
         struct ReadString Param1;
         struct ReadString Param2;
     }
 
     int unk2;
 
-    if ( (flags1 & 0x40) != 0)
+    if ( HasExtraInt )
     {
-        //Printf("0x40 flag\n");
-
         int unk3;
     }
     
-    if ( (flags1 & 1) != 0)
+    if ( HasGeometry )
     {
-        //Printf("0x01 flag\n");
-
         uint MeshType;
-        //Printf("Mesh type = %d\n", MeshType);
     }
-    if ( (flags1 & 2) != 0) 
+    
+    
+    if ( HasInstance ) 
     {
-        //Printf("0x02 flag\n");
-
-        struct ReadString Param1;
+        struct ReadString InstanceName;
         struct Transformer Transformer1;
     }
-    if ( (flags1 & 0x20) != 0)
-    {
-        //Printf("0x20 flag\n");
-        //uint unk5;
-        readExtra = 1;
-    }
+
 
 }zwoEntity3D;
 

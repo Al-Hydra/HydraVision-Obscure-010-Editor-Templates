@@ -76,8 +76,8 @@ typedef struct{
                 float rotation[4];
             }rotations[FrameCount-1];
         }
-        
-        if (flag == 5)
+            
+            if (flag == 5)
         {
             struct{
                 float translation[4];
@@ -131,4 +131,4 @@ typedef struct{
             float W;
         }Transformer2Curve;
     }
-}zwoSkeletalAnim;
+}zwoSkeletalAnim <read = Entity.Name>;

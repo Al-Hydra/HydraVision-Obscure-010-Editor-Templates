@@ -43,7 +43,7 @@ typedef struct{
         {
             local int VertexBufferCount = 1;
         }
-        struct VertexBuffer Vertices[VertexBufferCount];
+        struct VertexBuffer vertexBuffers[VertexBufferCount];
         
         uint FaceCount;
         int TriangleType; //0 = triangle strip, 1 = triangle list
@@ -61,7 +61,7 @@ typedef struct{
             uint unkExtra;
         }
     }
-}zwoMesh;
+}zwoMesh <read = Entity.Name>;
 
 typedef struct{
     uint VertexCount;
