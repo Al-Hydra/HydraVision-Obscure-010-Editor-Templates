@@ -56,7 +56,7 @@ typedef struct{
         {
             struct FaceInt Faces[FaceCount] <read = Str("%d, %d, %d", this.VertexIndex1, this.VertexIndex2, this.VertexIndex3)>;
         }
-        if (Entity3D.readExtra == 1)
+        if (Entity3D.HasAnimFrame)
         {
             uint unkExtra;
         }

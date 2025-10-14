@@ -1,43 +1,82 @@
 //------------------------------------------------
-//--- 010 Editor v13.0.1 Binary Template
+//--- 010 Editor v14.0 Binary Template
 //
 //      File: 
-//   Authors: HydraBladeZ
-//   Version: 1.0
-//   Purpose: Parse .lng files in Obscure 2
-//  Category: HydraVision
-// File Mask: *.lng
-//  ID Bytes: 
-//   History: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
 //------------------------------------------------
-uint Magic;
-if (Magic == 0)
-{
-    BigEndian();
+
+typedef struct {
+    uint metadata <format=hex>;  // Flags
+    uint length;
+    
+    // Extract metadata fields
+    local uint type = (metadata >> 16) & 0xF;
+    local uint color = (metadata >> 24) & 0x3F;
+    local uint gender = (metadata >> 16) & 0x7;
+    local uint hasSound = (metadata >> 15) & 0x1;
+    local uint colorFlag = (metadata >> 20) & 0xF;
+    
+    if (type == 0 || type == 3) {
+        char stringData[length];
+    } else {
+        // Skip data for other types
+        byte skipData[length];
+    }
+} StringEntry <read=ReadStringEntry, optimize=false>;
+
+string ReadStringEntry(StringEntry &entry) {
+    local string s;
+    if (entry.type == 0 || entry.type == 3) {
+        SPrintf(s, "[Type=%d] %s", entry.type, entry.stringData);
+    } else {
+        SPrintf(s, "[Type=%d] <skipped %d bytes>", entry.type, entry.length);
+    }
+    return s;
 }
-uint StringsCount;
-local int s;
-local int ss;
-for (s=0; s < StringsCount; s++)
-{
-    struct{
-        short StringOrder;
-        short TextID;
-        uint SubStringCount;
-        ushort unk;
-        
-        char u16string[unk];
-        
-        struct{
-            for (ss=0; ss < SubStringCount; ss++)
-            {
-                struct{
-                    ushort Unk1;
-                    ushort Unk2;
-                    uint StringLength;
-                    char String[StringLength];
-                }String;
-            }
-        }SubString;
-    }String;
+
+typedef struct {
+    uint groupID;
+    uint stringCount;
+    
+    local int i;
+    for (i = 0; i < stringCount; i++) {
+        StringEntry strings;
+    }
+} StringGroup <read=ReadStringGroup, optimize=false>;
+
+string ReadStringGroup(StringGroup &group) {
+    local string s;
+    SPrintf(s, "Group 0x%08X (%d strings)", group.groupID, group.stringCount);
+    return s;
 }
+
+typedef struct {
+    uint totalStringCount;
+    if (totalStringCount == 0)
+    {
+        BigEndian();   
+    }
+    
+    uint stringGroups;      // Number of string groups
+    
+    local int i;
+    for (i = 0; i < stringGroups; i++) {
+        StringGroup groups;
+    }
+} StringTableFile <read=ReadStringTable>;
+
+string ReadStringTable(StringTableFile &file) {
+    local string s;
+    SPrintf(s, "String Table: %d groups", file.stringGroups);
+    return s;
+}
+
+//------------------------------------------------
+// Main execution
+//------------------------------------------------
+
+LittleEndian();
+StringTableFile file;
