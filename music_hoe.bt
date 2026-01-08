@@ -1,0 +1,66 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: Ran-j
+//   Version: 1.0
+//   Purpose: Parse music.hoe files in Obscure 1
+//  Category: HydraVision
+// File Mask: music.hoe
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+// for hoe file type 5 is music.hoe (TypeId=5). this still WIP
+
+BigEndian();
+
+typedef struct
+{
+    float headerFloat1;
+    uint  headerU32;
+    float headerFloat2;
+
+    uint  nameLen;
+    char  name[nameLen];
+    ubyte nameNull;
+
+    local uint namePad = (4 - ((nameLen + 1) % 4)) % 4;
+    if (namePad > 0)
+    {
+        local int64 padStart = FTell();
+        FSeek(padStart + namePad);
+    }
+} HoeBeHeader;
+
+typedef struct
+{
+    uint reserved0;
+    uint groupCount;
+    uint reserved1;
+    uint reserved2;
+    uint sharedNameCount;
+} SharedHeaderLe;
+
+typedef struct
+{
+    ubyte len;
+    char  text[len];
+    ubyte tail[3];
+} ZStrCompact;
+
+typedef struct
+{
+    uint meta;
+    uint value;
+} ValuePairLe;
+ 
+HoeBeHeader header;
+
+LittleEndian();
+
+SharedHeaderLe sharedHeader;
+
+ZStrCompact sharedNames[sharedHeader.sharedNameCount] <optimize=false>;
+
+uint valuePairCount;
+ValuePairLe valuePairs[valuePairCount] <optimize=false>; 
