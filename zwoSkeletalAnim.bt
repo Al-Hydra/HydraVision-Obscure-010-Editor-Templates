@@ -46,12 +46,53 @@ typedef struct{
     uint CurvesCount;
     
     LittleEndian();
-    struct{
+    /*struct{
         float X;
         float Y;
         float Z;
         float W;
-    }Curves[CurvesCount];
+    }Curves[CurvesCount];*/
+    
+    local int currentBone = 0;
+    local int flag;
+    local int index;
+    local int frames;
+    struct{
+        flag = BoneCurves[currentBone].EntryTypeFlag;
+        index = BoneCurves[currentBone].CurveStartIndex;
+        frames = BoneCurves[currentBone].CurvesPerFrame;
+        
+        if (flag & 1)
+        {
+            struct{
+                float rotation[4];
+                float translation[4];
+                float scale[4];
+            }StartValues;
+        }
+        if (flag == 3)
+        {
+            struct{
+                float rotation[4];
+            }rotations[FrameCount-1];
+        }
+            
+            if (flag == 5)
+        {
+            struct{
+                float translation[4];
+            }rotationsTranslations[FrameCount-1];
+        }
+        
+        if (flag == 7)
+        {
+            struct{
+                float rotation[4];
+                float translation[4];
+            }rotationsTranslations[FrameCount-1];
+        }
+        currentBone++;
+    }boneCurves[BonesCount]<optimize = false>;
     
     BigEndian();
     
@@ -90,4 +131,4 @@ typedef struct{
             float W;
         }Transformer2Curve;
     }
-}zwoSkeletalAnim;
+}zwoSkeletalAnim <read = Entity.Name>;

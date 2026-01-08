@@ -1,5 +1,5 @@
 //------------------------------------------------
-//--- 010 Editor v13.0.1 Binary Template
+//--- 010 Editor v14.0 Binary Template
 //
 //      File: 
 //   Authors: Ran-j
@@ -48,3 +48,31 @@ for (i = 0; i < header.entryCount; i++)
 {
     Entry e;
 }
+
+typedef struct {
+    uint totalStringCount;
+    if (totalStringCount == 0)
+    {
+        BigEndian();   
+    }
+    
+    uint stringGroups;      // Number of string groups
+    
+    local int i;
+    for (i = 0; i < stringGroups; i++) {
+        StringGroup groups;
+    }
+} StringTableFile <read=ReadStringTable>;
+
+string ReadStringTable(StringTableFile &file) {
+    local string s;
+    SPrintf(s, "String Table: %d groups", file.stringGroups);
+    return s;
+}
+
+//------------------------------------------------
+// Main execution
+//------------------------------------------------
+
+LittleEndian();
+StringTableFile file;
