@@ -1,0 +1,49 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+BigEndian();
+
+uint size;
+
+uint unk;
+uint count;
+
+struct{
+    char code[4];
+    local string reversedCode = code;
+    reversedCode = reverse(reversedCode);
+    ushort value1;
+    ushort value2;
+    }assets[count] <read = Str("%s, (%d), (%d)", reversedCode, value1, value2), optimize = false>;
+
+uint count2;
+
+struct{
+    char characterCode[4];
+    local string str = characterCode;
+    str = reverse(str);
+    }characterCodes[count2] <read = str, optimize = false>;
+    
+    
+string reverse(string str) {
+    local int len = sizeof(str);
+    local int i;
+    local char temp;
+    for (i = 0; i < len / 2; i++) {
+        temp = str[i];
+        str[i] = str[len - i - 1];
+        str[len - i - 1] = temp;
+    }
+    
+    local string newstring = str;
+    return newstring;
+}

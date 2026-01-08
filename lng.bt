@@ -1,5 +1,5 @@
 //------------------------------------------------
-//--- 010 Editor v13.0.1 Binary Template
+//--- 010 Editor v14.0 Binary Template
 //
 //      File: 
 //   Authors: Ran-j
@@ -10,41 +10,49 @@
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
-BigEndian();
+LittleEndian();
 
-typedef struct
+struct Header
 {
-    uint32 zero <bgcolor=0x666666>;
-    uint32 entryCount <bgcolor=0x666666>;
-} Ob1Header;
+    uint32 languageCode   <bgcolor=0x666666>;
+    uint32 groupCount     <bgcolor=0x666666>;
+};
 
-typedef struct
+struct Entry(uint32 groupIndex, uint32 entryIndex)
 {
-    uint16 group <bgcolor=0xAAFFAA>;
-    uint16 id    <bgcolor=0xAAFFAA>;
-    uint32 payloadLen <fgcolor=0x0000FF>;
-  
-    ubyte encoding <bgcolor=0xCCCCCC>;
+    uint32 meta <bgcolor=0xCCCCCC>;
+    uint32 len  <fgcolor=0x0000FF>;
 
-    if (encoding == 0)
+    local uint32 type;
+    local uint32 variant;
+    local int voiceFlag;
+
+    type      = (meta >> 16) & 0xF;
+    variant   = (meta >> 24) & 0x3F;
+    voiceFlag = ((meta & 0x8000) != 0); 
+
+    if (len > 0)
     {
-        char text[payloadLen - 1] <bgcolor=0xFFE0E0>;
+        char text[len] <bgcolor=0xFFE0E0>;
     }
-    else if (encoding == 1)
-    {
-        ubyte param <bgcolor=0xCCCCCC>;
-        ubyte data[payloadLen - 2] <bgcolor=0xFFE0E0>;
-    }
-    else if (payloadLen > 1)
-    {
-        ubyte data[payloadLen - 1] <bgcolor=0xFFE0E0>;
-    } 
-} Entry;
+};
 
-Ob1Header header;
-
-local uint32 i;
-for (i = 0; i < header.entryCount; i++)
+struct Group(uint32 groupIndex)
 {
-    Entry e;
+    uint32 groupId    <bgcolor=0xAAFFAA>;
+    uint32 entryCount <bgcolor=0xAAFFAA>; 
+
+    local uint32 i;
+    for (i = 0; i < entryCount; i++)
+    {
+        Entry entry(groupIndex, i);
+    }
+};
+
+Header header;
+ 
+local uint32 g;
+for (g = 0; g < header.groupCount; g++)
+{
+    Group group(g);
 }

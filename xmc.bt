@@ -1,0 +1,38 @@
+//------------------------------------------------
+//--- 010 Editor v15.0 Binary Template
+//
+//      File: 
+//   Authors: 
+//   Version: 
+//   Purpose: 
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+LittleEndian();
+
+uint nodeCount;
+uint attributeCount;
+uint stringsSize;
+
+struct{
+    uint tagCRC32;
+    ushort parentIndex;
+    ushort childCount;
+    ushort firstChildIndex;
+    ushort attributeCount;
+    ushort firstAttributeIndex;
+    ushort unused;
+}nodes[nodeCount];
+
+struct{
+    uint attributeCRC32;
+    uint stringOffset;   
+    
+}attributes[attributeCount];
+
+struct{
+    string name;   
+    
+}strings[count2]<optimize = false, read= name>;

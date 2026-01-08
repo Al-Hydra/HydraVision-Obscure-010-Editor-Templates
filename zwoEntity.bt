@@ -11,6 +11,9 @@
 //   History: 
 //------------------------------------------------
 typedef struct{
+    
+    local string Name = "NoName";
+    
     uint Size;
     
     if (Size != 0)
@@ -25,13 +28,25 @@ typedef struct{
         
         if (HeaderType == 5)
         {
-            struct ReadString Name;
+            uint StringLength;
+            if (StringLength > 0)
+            {
+                char String[StringLength];
+                Name = String;
+            }
+
             uint Type;
         }
     
         if (HeaderType == 6)
         {
-            struct ReadString Name;
+            uint StringLength;
+            if (StringLength > 0)
+            {
+                char String[StringLength];
+                Name = String;
+            }
+
             uint Type;
             uint unk2;
             uint unk3;
