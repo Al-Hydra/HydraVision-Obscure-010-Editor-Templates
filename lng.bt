@@ -2,38 +2,49 @@
 //--- 010 Editor v13.0.1 Binary Template
 //
 //      File: 
-//   Authors: HydraBladeZ
+//   Authors: Ran-j
 //   Version: 1.0
-//   Purpose: Parse .lng files in Obscure 2
+//   Purpose: Parse .lng files in Obscure 1
 //  Category: HydraVision
 // File Mask: *.lng
 //  ID Bytes: 
 //   History: 
 //------------------------------------------------
-uint Magic;
-if (Magic == 0)
+BigEndian();
+
+typedef struct
 {
-    BigEndian();
-}
-uint StringsCount;
-local int s;
-local int ss;
-for (s=0; s < StringsCount; s++)
+    uint32 zero <bgcolor=0x666666>;
+    uint32 entryCount <bgcolor=0x666666>;
+} Ob1Header;
+
+typedef struct
 {
-    struct{
-        short StringOrder;
-        short TextID;
-        uint SubStringCount;
-        struct{
-            for (ss=0; ss < SubStringCount; ss++)
-            {
-                struct{
-                    ushort Unk1;
-                    ushort Unk2;
-                    uint StringLength;
-                    char String[StringLength];
-                }String;
-            }
-        }SubString;
-    }String;
+    uint16 group <bgcolor=0xAAFFAA>;
+    uint16 id    <bgcolor=0xAAFFAA>;
+    uint32 payloadLen <fgcolor=0x0000FF>;
+  
+    ubyte encoding <bgcolor=0xCCCCCC>;
+
+    if (encoding == 0)
+    {
+        char text[payloadLen - 1] <bgcolor=0xFFE0E0>;
+    }
+    else if (encoding == 1)
+    {
+        ubyte param <bgcolor=0xCCCCCC>;
+        ubyte data[payloadLen - 2] <bgcolor=0xFFE0E0>;
+    }
+    else if (payloadLen > 1)
+    {
+        ubyte data[payloadLen - 1] <bgcolor=0xFFE0E0>;
+    } 
+} Entry;
+
+Ob1Header header;
+
+local uint32 i;
+for (i = 0; i < header.entryCount; i++)
+{
+    Entry e;
 }

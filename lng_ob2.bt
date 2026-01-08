@@ -1,0 +1,58 @@
+//------------------------------------------------
+//--- 010 Editor v13.0.1 Binary Template
+//
+//      File: 
+//   Authors: Ran-j
+//   Version: 1.0
+//   Purpose: Parse .lng files in Obscure 2
+//  Category: HydraVision
+// File Mask: *.lng
+//  ID Bytes: 
+//   History: 
+//------------------------------------------------
+LittleEndian();
+
+struct Header
+{
+    uint32 languageCode   <bgcolor=0x666666>;
+    uint32 groupCount     <bgcolor=0x666666>;
+};
+
+struct Entry(uint32 groupIndex, uint32 entryIndex)
+{
+    uint32 meta <bgcolor=0xCCCCCC>;
+    uint32 len  <fgcolor=0x0000FF>;
+
+    local uint32 type;
+    local uint32 variant;
+    local int voiceFlag;
+
+    type      = (meta >> 16) & 0xF;
+    variant   = (meta >> 24) & 0x3F;
+    voiceFlag = ((meta & 0x8000) != 0); 
+
+    if (len > 0)
+    {
+        char text[len] <bgcolor=0xFFE0E0>;
+    }
+};
+
+struct Group(uint32 groupIndex)
+{
+    uint32 groupId    <bgcolor=0xAAFFAA>;
+    uint32 entryCount <bgcolor=0xAAFFAA>; 
+
+    local uint32 i;
+    for (i = 0; i < entryCount; i++)
+    {
+        Entry entry(groupIndex, i);
+    }
+};
+
+Header header;
+ 
+local uint32 g;
+for (g = 0; g < header.groupCount; g++)
+{
+    Group group(g);
+}
